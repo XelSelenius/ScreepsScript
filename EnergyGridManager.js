@@ -26,6 +26,10 @@ global.SupplyCreep = SupplyCreep;
 global.SupplyFactory = SupplyFactory;
 global.SupplyTerminal = SupplyTerminal;
 
+const TRANSFER_PATH = {visualizePathStyle: {stroke: '#0005a7'}};
+const WITHDRAW_PATH = {visualizePathStyle: {stroke: '#f9fd00'}};
+
+
 //region Section 0: Basic Functions
 /**
  * Universal WithdrawEnergy of Energy between Creeps and Structure.
@@ -35,7 +39,7 @@ global.SupplyTerminal = SupplyTerminal;
  */
 function WithdrawEnergy(creep, container, resource = RESOURCE_ENERGY) {
     if (creep.withdraw(container, resource) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(container, {visualizePathStyle: {stroke: '#ffaa00'}});
+        creep.moveTo(container, WITHDRAW_PATH);
     }
 }
 
@@ -47,9 +51,10 @@ function WithdrawEnergy(creep, container, resource = RESOURCE_ENERGY) {
  */
 function TransferEnergy(creep, provider, resource = RESOURCE_ENERGY) {
     if (creep.transfer(provider, resource) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(provider, {visualizePathStyle: {stroke: '#000000'}});
+        creep.moveTo(provider, TRANSFER_PATH);
     }
 }
+
 //endregion
 
 // region Section 1: Recharge Functions
@@ -352,4 +357,5 @@ function SupplyTerminal(creep, resource) {
         TransferEnergy(creep, terminal, resource);
     }
 }
+
 //endregion
