@@ -1,28 +1,19 @@
-// noinspection JSCheckFunctionSignatures,JSUnresolvedReference
-
-const _ = require("lodash");
+require("lodash");
 
 //Global Functions and Constants
-global.getEnergyContainers = getEnergyContainers;
-global.getEmptyContainers = getEmptyContainers;
-global.getTombstones = getTombstones;
-global.getNearestContainer = getNearestContainer;
-global.getCreepsByRole = getCreepsByRole;
 global.Mine = Mine;
 global.Salvage = Salvage;
 global.Reinforce = Reinforce;
 global.Repair = Repair;
 global.Build = Build;
 global.Upgrade = Upgrade;
-global.Attack = Attack;
-global.Defend = Defend;
 global.Tombraiding = Tombraiding;
 global.ConductCollection = ConductCollection;
-global.Haul = Haul;
 global.ReserveController = ReserveController;
 global.ClaimController = ClaimController;
+global.Attack = Attack;
+global.Defend = Defend;
 global.extendCreepLifespan = extendCreepLifespan;
-global.SupplyUpgrader = SupplyUpgrader;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -39,51 +30,6 @@ const REINFORCE_LEVEL = 30000;
 const RAMPART = [
     new RoomPosition(11, 19, Game.rooms['W59S4'].name),
 ];
-
-// Find all containers in the room that contain Energy
-function getEnergyContainers(creep) {
-    return creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_CONTAINER
-            && structure.store[RESOURCE_ENERGY] > 0
-    });
-}
-
-// Find all containers in the room that are empty
-function getEmptyContainers(creep) {
-    return creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_CONTAINER
-            && structure.store.getUsedCapacity() < CONTAINER_CAPACITY
-    });
-}
-
-// Find all Tombstones in the room
-function getTombstones(creep) {
-    return creep.room.find(FIND_TOMBSTONES, {
-        filter: tombstone => tombstone.store && Object.keys(tombstone.store).length > 0
-    });
-}
-
-// Find nearest single container in the room
-function getNearestContainer(creep) {
-    let containers = getEmptyContainers(creep);
-    if (containers.length > 0) {
-        return creep.pos.findClosestByPath(containers);
-    } else {
-        console.log("No Containers in this Room")
-    }
-}
-
-/**
- * Get creeps by role, providing the room name for inter-room functionality
- * @param role
- * @param roomName
- * @returns {*}
- */
-function getCreepsByRole(role, roomName) {
-    return Game.rooms[roomName].find(FIND_MY_CREEPS, {
-        filter: creep => creep.memory.role === role
-    });
-}
 
 /**
  * Balanced and Optimized function to Mine from Energy Source
@@ -118,7 +64,7 @@ function Mine(creep) {
  */
 function Salvage(creep) {
     //Find Ruins
-    let ruins = Game.rooms['W59S4'].find(FIND_RUINS);
+    let ruins = creep.room.find(FIND_RUINS);
 
     //If Ruins in the room Exist, WithdrawEnergy existing Energy from them
     if (ruins.length > 0) {
@@ -131,7 +77,7 @@ function Salvage(creep) {
             }
         }
     } else {
-        console.log("No Ruins present in the room at the moment");
+        // console.log("No Ruins present in the room at the moment");
     }
 }
 
@@ -214,47 +160,13 @@ function Build(creep, roomName) {
 }
 
 /**
- * Upgrade Function
+ * Upgrade Function modified for Trans-Room Usability
  * @param creep
+ * @param room
  * */
-function Upgrade(creep) {
-    if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(creep.room.controller, UPGRADE_PATH);
-    }
-}
-
-function Attack(creep, hostiles) {
-    console.log(`Hostiles: ${hostiles.length}`)
-    // Attack the nearest hostile creep
-    if (creep.attack(hostiles[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(hostiles[0], {visualizePathStyle: {stroke: '#ff0000'}});
-    }
-}
-
-function Defend(creep, hostiles) {
-    let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
-    let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
-    for (let d = 0; d < defenders.length; d++) {
-        if (defenders[d].pos !== RAMPART[d] && defenders[d].memory.role === 'defender') {
-            defenders[d].moveTo(RAMPART[d], DEFENCE_PATH)
-            // Find hostile creeps in Melee range
-            let hostileCreepsInMelee = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 1); // Adjust the range as needed
-            if (hostiles.length > 0 && defenders[d].memory.role === 'defender') {
-                // Attack the closest hostile creep
-                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInMelee);
-                defenders[d].attack(targetCreep);
-            }
-        }
-        if (rangers[d].pos !== RAMPART[d]) {
-            rangers[d].moveTo(new RoomPosition(RAMPART[d].x + 1, RAMPART[d].y + 1, Game.rooms['W59S4'].name), DEFENCE_PATH)
-            // Find hostile creeps in Ranged range
-            let hostileCreepsInRange = rangers[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
-            if (hostiles.length > 0 && rangers[d].memory.role === 'ranger') {
-                // Range Attack the closest hostile creep
-                let targetCreep = rangers[d].pos.findClosestByRange(hostileCreepsInRange);
-                rangers[d].rangedAttack(targetCreep);
-            }
-        }
+function Upgrade(creep, room) {
+    if (creep.upgradeController(room.controller) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(room.controller, UPGRADE_PATH);
     }
 }
 
@@ -264,7 +176,9 @@ function Defend(creep, hostiles) {
  */
 function Tombraiding(creep) {
     // Find tombstones with resources
-    let tombstones = getTombstones(creep)
+    let tombstones = creep.room.find(FIND_TOMBSTONES, {
+        filter: tombstone => tombstone.store && Object.keys(tombstone.store).length > 0
+    });
 
     if (tombstones.length > 0) {
         // console.log("Number of Tombstones: " + tombstones.length)
@@ -275,9 +189,10 @@ function Tombraiding(creep) {
         }
     } else {
         creep.say('🔄 Idle');
-        RechargeStorage(creep);
+        RechargeStorage(creep, creep.room);
+
         if (creep.store.getUsedCapacity() === 0)
-            creep.moveTo(new RoomPosition(16, 40, creep.room.name))
+            creep.moveTo(new RoomPosition(15, 40, creep.room.name))
     }
 }
 
@@ -301,24 +216,9 @@ function ConductCollection(creep) {
     } else {
         // Handle the case when there are no  dropped valid resources
         creep.say('🔄 Idle');
-        RechargeStorage(creep);
+        RechargeStorage(creep, creep.room);
         if (creep.store.getUsedCapacity() === 0)
             creep.moveTo(new RoomPosition(13, 40, creep.room.name));
-    }
-}
-
-/**
- * Conducts Hauling of energy in case Link is not available
- * @deprecated
- * @param creep
- */
-function Haul(creep) {
-    let sources = [
-        Game.getObjectById(ZYNTHIUM_CONTAINER),
-    ];
-    if (sources[0].store.getUsedCapacity() > 1000) {
-        Withdraw(creep, sources[0]);
-        WithdrawEnergy(creep, sources[0]);
     }
 }
 
@@ -369,8 +269,41 @@ function ClaimController(creep) {
     }
 }
 
-
 //incomplete
+
+function Attack(creep, hostiles) {
+    console.log(`Hostiles: ${hostiles.length}`)
+    // Attack the nearest hostile creep
+    if (creep.attack(hostiles[0]) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(hostiles[0], {visualizePathStyle: {stroke: '#ff0000'}});
+    }
+}
+function Defend(creep, hostiles) {
+    let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
+    let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
+    for (let d = 0; d < defenders.length; d++) {
+        if (defenders[d].pos !== RAMPART[d] && defenders[d].memory.role === 'defender') {
+            defenders[d].moveTo(RAMPART[d], DEFENCE_PATH)
+            // Find hostile creeps in Melee range
+            let hostileCreepsInMelee = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 1); // Adjust the range as needed
+            if (hostiles.length > 0 && defenders[d].memory.role === 'defender') {
+                // Attack the closest hostile creep
+                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInMelee);
+                defenders[d].attack(targetCreep);
+            }
+        }
+        if (rangers[d].pos !== RAMPART[d]) {
+            rangers[d].moveTo(new RoomPosition(RAMPART[d].x + 1, RAMPART[d].y + 1, Game.rooms['W59S4'].name), DEFENCE_PATH)
+            // Find hostile creeps in Ranged range
+            let hostileCreepsInRange = rangers[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
+            if (hostiles.length > 0 && rangers[d].memory.role === 'ranger') {
+                // Range Attack the closest hostile creep
+                let targetCreep = rangers[d].pos.findClosestByRange(hostileCreepsInRange);
+                rangers[d].rangedAttack(targetCreep);
+            }
+        }
+    }
+}
 function extendCreepLifespan(creep) {
     // Check if the creep needs healing
     if (creep.hits < creep.hitsMax) {
@@ -398,26 +331,4 @@ function extendCreepLifespan(creep) {
             console.log(`No healers found nearby to extend the lifespan of ${creep.name}`);
         }
     }
-}
-
-
-function SupplyUpgrader(supplier) {
-    // console.log(upgrader.store[RESOURCE_ENERGY]);
-    let upgrader = FindUpgrader(supplier);
-    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0) {
-        if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-            supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
-        }
-    }
-}
-
-function FindUpgrader(supplier) {
-    // Find all friendly harvester creeps within a range that have energy
-    let sourceCreeps = Object.values(Game.creeps).filter(upgrader => upgrader.memory.role === 'upgrader' && upgrader.room.name === supplier.room.name);
-
-    // Sort the source creeps based on their energy level (ascending order)
-    sourceCreeps.sort((a, b) => a.store[RESOURCE_ENERGY] - b.store[RESOURCE_ENERGY]);
-
-    // Return the harvester creep with the highest energy (first in the sorted array)
-    return sourceCreeps[0];
 }
