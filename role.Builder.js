@@ -16,7 +16,7 @@ let roleBuilder = {
         } else {
             if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 0) {
                 RechargeCreep(creep, 'S')
-            } else{
+            } else {
                 RechargeCreep(creep, 'C')
             }
 
