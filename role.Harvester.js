@@ -1,5 +1,3 @@
-require('ResourcesUtility')
-
 let roleHarvester = {
 
     /** @param {Creep} creep **/
@@ -10,9 +8,9 @@ let roleHarvester = {
                 || s.structureType === STRUCTURE_STORAGE
                 || s.structureType === STRUCTURE_LINK
         });
-        if (deploymentPoint.length > 0 && creep.store[RESOURCE_ENERGY] > 0) {
+        if (deploymentPoint.length > 0 && creep.store.getUsedCapacity() > 0) {
             if (deploymentPoint[0].structureType === STRUCTURE_STORAGE) {
-                RechargeStorage(creep)
+                RechargeStorage(creep, creep.room)
             }
             if (deploymentPoint[0].structureType === STRUCTURE_CONTAINER) {
                 RechargeContainer(creep);
@@ -20,9 +18,6 @@ let roleHarvester = {
             if (deploymentPoint[0].structureType === STRUCTURE_LINK) {
                 RechargeLink(creep);
             }
-        }
-        if (creep.store[RESOURCE_ZYNTHIUM] > 0) {
-            TransferEnergy(creep, getNearestContainer(creep), RESOURCE_ZYNTHIUM);
         }
     }
 };
