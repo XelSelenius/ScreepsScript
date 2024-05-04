@@ -5,32 +5,12 @@ let roleCarrier = {
      */
     run: function (creep) {
         setCarrierParameter(creep)
+        creep.memory.targetRoom = 'W59S3';
+        creep.memory.originRoom = 'W59S4';
         if (creep.memory.carrier) {
-            creep.memory.targetRoom = 'W59S4'
-
-            if (creep.room.name !== creep.memory.targetRoom) {
-                creep.moveTo(new RoomPosition(28, 14, creep.memory.targetRoom), {visualizePathStyle: {stroke: '#ffaa00'}});
-            } else {
-                if (creep.room.storage) {
-                    WithdrawEnergy(creep, Game.rooms['W59S4'].storage);
-                } else {
-                    let containers = getEnergyContainers(creep);
-                    creep.moveTo(new RoomPosition(14, 46, creep.memory.targetRoom), {visualizePathStyle: {stroke: '#ffaa00'}});
-                    WithdrawEnergy(creep, getEnergyContainers(creep)[0]);
-                }
-            }
+            WithdrawFromStorage(creep, Game.rooms[creep.memory.originRoom])
         } else {
-            creep.memory.targetRoom = 'W59S5'
-
-            if (creep.room.name !== creep.memory.targetRoom) {
-                creep.moveTo(new RoomPosition(28, 14, creep.memory.targetRoom), {visualizePathStyle: {stroke: '#ffaa00'}});
-            } else {
-                if (RechargeSpawn(creep)) {
-                    if (RechargeExtension(creep)){
-                        TransferEnergy(creep, Game.getObjectById('65d51e16d7c47401cfc6bf95'))
-                    }
-                }
-            }
+            RechargeStorage(creep, Game.rooms[creep.memory.targetRoom]);
         }
     }
 };
@@ -38,7 +18,7 @@ let roleCarrier = {
 module.exports = roleCarrier;
 
 /**
- *
+ * Set parameters of direction of the Carrier - going or returning
  * @param creep
  */
 function setCarrierParameter(creep) {
