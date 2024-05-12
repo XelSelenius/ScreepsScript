@@ -6,13 +6,13 @@ let roleUpgrader = {
 
         //Define Actions when creep is full of Energy
         if (creep.memory.upgrading) {
-            Upgrade(creep);
+            Upgrade(creep, creep.room);
 
-            //Define Recharging Strategy as per room Level
+        //Define Recharging Strategy as per room Level
         } else {
-            let chargingPoint = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 5, {
-                filter: s => (s.structureType === STRUCTURE_CONTAINER
-                    || s.structureType === STRUCTURE_STORAGE
+            let chargingPoint = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 3, {
+                filter: s => (s.structureType === STRUCTURE_STORAGE
+                    || s.structureType === STRUCTURE_CONTAINER
                     || s.structureType === STRUCTURE_LINK) && s.store[RESOURCE_ENERGY] > 0
             });
 
