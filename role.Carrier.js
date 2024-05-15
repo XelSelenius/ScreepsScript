@@ -5,12 +5,15 @@ let roleCarrier = {
      */
     run: function (creep) {
         setCarrierParameter(creep)
-        creep.memory.targetRoom = 'W59S3';
-        creep.memory.originRoom = 'W59S4';
+
+        let originRoom = Game.rooms['W59S5'];
+        let targetRoom = Game.rooms['W59S4'];
+        let cargo = RESOURCE_HYDROGEN;
+
         if (creep.memory.carrier) {
-            WithdrawFromStorage(creep, Game.rooms[creep.memory.originRoom])
+            WithdrawFromStorage(creep, originRoom, cargo)
         } else {
-            RechargeStorage(creep, Game.rooms[creep.memory.targetRoom]);
+            RechargeStorage(creep, targetRoom);
         }
     }
 };

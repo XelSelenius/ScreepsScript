@@ -13,44 +13,53 @@ let roleRanger = require('role.Ranger');
 let roleCarrier = require('role.Carrier');
 let roleManager = require('role.Manager');
 
-global.ROOM = Game.rooms['W59S4'];
-global.ZYNTHIUM_CONTAINER = '65c8065fadd2617162d9f072';
-
 const roomData = {
     'W59S4': {
-        'spawner': 'Xel\'Invictus',
+        'factory': RESOURCE_ZYNTHIUM_BAR,
+        'spawner': 'Xel\'Invictus Primus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
             // 'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 20),
-            'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
-            // 'builder': 1,
-            'hauler': 2,
+            'upgrader': 1,
+            'builder': 0,
+            'hauler': 1,
             'collector': 1,
             'tombraider': 1,
             // 'defender': 1,
             // 'ranger': 1,
             // 'claimer': 1,
-            'supplier': 1,
             'manager': 1,
-            // 'carrier':1,
+            'carrier': 0,
             // Add more roles and counts as needed for the Room
         }
     },
     'W59S5': {
         'spawner': `Xel'Hydrogenius`,
         'creepCounts': {
-            'harvester': 1,
-            // 'repairer': Math.max(1, Memory.rooms['W59S5'].damagedStructures.length / 20),
-            'upgrader': Math.max(1, Game.rooms['W59S5'].storage.store[RESOURCE_ENERGY] / 100000),
-            // 'builder': 1,
+            'harvester': Memory.rooms['W59S5'].sourceIDs.length,
+            'upgrader': 1,//Math.max(1, Game.rooms['W59S5'].storage.store[RESOURCE_ENERGY] / 100000),
+            'builder': 0,
             'hauler': 1,
             'collector': 1,
             'tombraider': 1,
-            'supplier': 1,
-            // 'carrier': 1,
+            'manager': 1,
+            'carrier': 2,
             // Add more roles and counts as needed for the Room
         }
-    }
+    },
+    'W59S3': {
+        'spawner': `Xel'Aurelius Primus`,
+        'creepCounts': {
+            'harvester': Memory.rooms['W59S3'].sourceIDs.length,
+            'hauler': 1,
+            'upgrader': 2,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
+            'builder': 3,
+            'collector': 1,
+            'tombraider': 1,
+            'manager': 1,
+            'carrier': 0,
+        },
+    },
     // Add more rooms as needed
 };
 
@@ -73,7 +82,7 @@ const BodyPartsRenderer = {
     'minor-builder': [WORK, CARRY, MOVE, MOVE],
     'lesser-builder': [WORK, WORK, CARRY, MOVE, MOVE],
     'greater-builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-    'builder': [WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'builder': [WORK, WORK, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
 
     'minor-collector': [CARRY, CARRY, MOVE, MOVE],
     'lesser-collector': [CARRY, CARRY, MOVE, MOVE],
@@ -84,19 +93,19 @@ const BodyPartsRenderer = {
     'minor-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'lesser-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'greater-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-    'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    'hauler': [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
 
-    'manager': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    'manager': [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
 
     'minor-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'lesser-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'tombraider': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
 
-    'carrier': [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
-    'defender': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK],
+    'carrier': [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE],
+    'defender': [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK],
     'ranger': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK],
     'supplier': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
-    'claimer': [CLAIM, MOVE, MOVE],
+    'claimer': [CLAIM, CLAIM, CLAIM, CLAIM, CLAIM, MOVE, MOVE, MOVE],
 }
 
 /**
@@ -137,7 +146,6 @@ function BuildCreep(role, bodyParts, roleName, creepCounter, spawner) {
 function BuildCreepsForRoom(roomName) {
     const room = roomData[roomName];
     const spawner = room.spawner;
-
     for (let role in room.creepCounts) {
         const roleByController = getCreepBodyParts(role, Game.rooms[roomName].controller.level);
         const bodyParts = BodyPartsRenderer[roleByController];
@@ -146,7 +154,7 @@ function BuildCreepsForRoom(roomName) {
     }
 
     //Say what you build, Spawner
-    if (Game.spawns[spawner].spawning) {
+    if (spawner && Game.spawns[spawner].spawning) {
         let spawningCreep = Game.creeps[Game.spawns[spawner].spawning.name];
         Game.spawns[spawner].room.visual.text(
             '🛠️' + spawningCreep.memory.role,
@@ -187,9 +195,19 @@ function CreepDrivers() {
     getConstructionSites();
     getSources();
     getLinkTransfer();
-    Tower();
-    Factory();
 
+    for (let roomName in roomData) {
+        Factory(Game.rooms[roomName]);
+        Tower(Game.rooms[roomName]);
+    }
+
+    //Market Interface
+    Game.market.deal('', 1000, 'W59S4');
+
+    let powerSpawn = Game.getObjectById("66371beb7929396fee3bc5d4")
+    if (powerSpawn.store[RESOURCE_ENERGY] > 0 && powerSpawn.store[RESOURCE_POWER] > 0) {
+        powerSpawn.processPower();
+    }
 
     // Define a mapping of roles to role functions
     const roleFunctions = {
@@ -222,25 +240,26 @@ function CreepDrivers() {
  * Check Room memory for Damaged structures. If non, find all, order them by hit points lost and set in memory.
  */
 function getDamagedStructures() {
-    for (let roomName in Game.rooms) {
-        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length <= 0) {
+    for (let roomName in roomData) {
+        // Ensure Memory.rooms[roomName] is initialized as an object
+        Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+
+        // Check if the room is visible
+        if (Game.rooms[roomName]) {
             let room = Game.rooms[roomName];
             let damagedStructures = room.find(FIND_STRUCTURES, {
                 filter: structure => {
                     return structure.hits < structure.hitsMax
-                        && structure.hits < 250000
                         && structure.structureType !== STRUCTURE_WALL
                         && structure.structureType !== STRUCTURE_RAMPART;
                 }
             });
 
-            // Order the damaged structures by their hits difference
-            // damagedStructures.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
-
             // Store the list of damaged structure IDs in Memory
             Memory.rooms[roomName].damagedStructures = _.map(damagedStructures, 'id');
+        } else {
+            console.log(`No visibility into room ${roomName}`);
         }
-        console.log(`Structures to Repair [${roomName}]: ${Memory.rooms[roomName].damagedStructures.length}`)
     }
 }
 
@@ -248,15 +267,24 @@ function getDamagedStructures() {
  * Finds and puts in memory all Construction sites in the rooms I own.
  */
 function getConstructionSites() {
-    for (let roomName in Game.rooms) {
+    for (let roomName in roomData) {
+        // Ensure Memory.rooms[roomName] is initialized as an object
+        Memory.rooms[roomName] = Memory.rooms[roomName] || {};
+
+        // Check if constructionSites array is not defined or empty
         if (!Memory.rooms[roomName].constructionSites || Memory.rooms[roomName].constructionSites.length === 0) {
-            let room = Game.rooms[roomName];
-            let sites = room.find(FIND_CONSTRUCTION_SITES);
-            if (sites) {
-                Memory.rooms[roomName].constructionSites = sites.map(site => site.id);
+            // Check if the room is visible
+            if (Game.rooms[roomName]) {
+                let room = Game.rooms[roomName];
+                let sites = room.find(FIND_CONSTRUCTION_SITES);
+                if (sites && sites.length > 0) {
+                    // Store the list of construction site IDs in Memory
+                    Memory.rooms[roomName].constructionSites = sites.map(site => site.id);
+                }
+            } else {
+                console.log(`No visibility into room ${roomName}`);
             }
         }
-        console.log(`Construction Sites for Room ${roomName}: ${Memory.rooms[roomName].constructionSites.length}`)
     }
 }
 
@@ -264,7 +292,7 @@ function getConstructionSites() {
  * Gathers all Source IDs, including Mineral Deposits that have Extractor constructed and are not Regenerating.
  */
 function getSources() {
-    for (let roomName in Game.rooms) {
+    for (let roomName in roomData) {
         //Get the Room Object from the name.
         let room = Game.rooms[roomName];
 
@@ -282,7 +310,7 @@ function getSources() {
 
         // Map the IDs of all sources to Memory and print to Console
         Memory.rooms[roomName].sourceIDs = allSources.map(source => source.id);
-        console.log(`Sources Count [${roomName}]: ${Memory.rooms[roomName].sourceIDs.length}`)
+        // console.log(`Sources Count [${roomName}]: ${Memory.rooms[roomName].sourceIDs.length}`)
     }
 }
 
@@ -300,29 +328,31 @@ function getLinkTransfer() {
             });
 
             // Find the closest link to storage
-            let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
-            links = _.without(links, closestLinkToStorage);
+            let closestLinkToStorage = room.storage.pos.findInRange(links, 2);
+            links = _.without(links, closestLinkToStorage[0]);
+            // console.log(`${room.name} - S - ${closestLinkToStorage.id}`);
 
             //Find the closest link to controller
-            let closestLinkToController = room.controller.pos.findClosestByRange(links);
-            links = _.without(links, closestLinkToController);
+            let closestLinkToController = room.controller.pos.findInRange(links, 3);
+            links = _.without(links, closestLinkToController[0]);
+            // console.log(`${room.name} - C - ${closestLinkToController[0].id}`);
 
             if (roomName === 'W59S5') {
-                closestLinkToStorage.transferEnergy(closestLinkToController);
+                closestLinkToStorage[0].transferEnergy(closestLinkToController[0]);
             } else {
                 for (let link of links) {
-                    if (closestLinkToController.energy === 0 && link.energy === 800) {
-                        room.visual.line(link.pos.x, link.pos.y, closestLinkToController.pos.x, closestLinkToController.pos.y, {
+                    if (closestLinkToController.length > 0 && closestLinkToController[0].energy === 0 && link.energy === 800) {
+                        room.visual.line(link.pos.x, link.pos.y, closestLinkToController[0].pos.x, closestLinkToController[0].pos.y, {
+                            color: 'green',
+                            lineStyle: 'dashed'
+                        });
+                        link.transferEnergy(closestLinkToController[0]);
+                    } else if (closestLinkToStorage.length > 0 && closestLinkToStorage[0].energy === 0 && link.energy === 800) {
+                        room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage[0].pos.x, closestLinkToStorage[0].pos.y, {
                             color: 'blue',
                             lineStyle: 'dashed'
                         });
-                        link.transferEnergy(closestLinkToController);
-                    } else if(closestLinkToStorage.energy === 0 && link.energy === 800){
-                        room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
-                            color: 'white',
-                            lineStyle: 'dashed'
-                        });
-                        link.transferEnergy(closestLinkToStorage);
+                        link.transferEnergy(closestLinkToStorage[0]);
                     }
                 }
             }
@@ -330,65 +360,58 @@ function getLinkTransfer() {
     }
 }
 
-function Factory() {
-    let factory = Game.getObjectById('65d71e80e4219d254f628572')
-
-    // Check if the factory is not on cooldown
-    if (factory.cooldown > 0) {
-        // console.log("Factory is on cooldown. Cannot transform Zynthium to bars.");
-        return;
-    }
-
-    // Check if the factory has enough resources and space to perform the transformation
-    if (factory.store.getUsedCapacity(RESOURCE_ZYNTHIUM) < 100 || factory.store.getFreeCapacity() < 100) {
-        // console.log("Insufficient resources or space in the factory.");
-        return;
-    }
-
-    // Perform the transformation
-    let result = factory.produce(RESOURCE_ZYNTHIUM_BAR);
-
-    if (result === OK) {
-        // console.log("Transformation of Zynthium to Zynthium bars successful.");
-    } else {
-        // console.log("Error: Unable to transform Zynthium to Zynthium bars. Error code:", result);
+/**
+ * Factory function runs the factory in every room based on the resources it is selected to sell.
+ * @param room
+ */
+function Factory(room) {
+    let factory = room.find(FIND_MY_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_FACTORY
+    });
+    if (factory.length > 0) {
+        let product = roomData[room.name].factory
+        if (factory[0].produce(product) === OK) {
+            console.log(`Production of ${product} successful.`);
+        } else if (factory[0].cooldown > 0) {
+            console.log("Error: Factory on Cooldown");
+        } else {
+            // console.log("Error: Something went Wrong");
+        }
     }
 }
 
-function Tower() {
-    for (let roomName in roomData) {
-        // Retrieve the room where the tower is located
-        let room = Game.rooms[roomName];
+/**
+ * Operates Towers for every given room
+ * @param room
+ */
+function Tower(room) {
+    // Find the towers in the room
+    let towers = room.find(FIND_MY_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_TOWER
+    });
 
-        // Find the tower in the room
-        let tower = room.find(FIND_MY_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_TOWER
-        });
+    // Find the enemy creep in the room
+    let enemies = room.find(FIND_HOSTILE_CREEPS);
 
-        // Find the enemy creep in the room
-        let enemy = room.find(FIND_HOSTILE_CREEPS);
-        if (tower.length > 0) {
+    // If Towers exist, use them for something
+    if (towers.length > 0) {
+        for (let s = 0; s < towers.length; s++) {
+            // Conduct Attack on Existing Enemies as Primary Priority
+            if (enemies && enemies.length > 0) {
+                towers[s].attack(enemies[0]);
 
-            // Check if tower and enemy exist
-            if (enemy && enemy.length > 0) {
-                tower[0].attack(enemy[0]);
-            }
-
-            // Conduct Repairs
-            if (Memory.rooms[roomName].damagedStructures.length > 0) {
-                for (let s = 0; s < tower.length; s++) {
-                    let structure = Game.getObjectById(Memory.rooms[roomName].damagedStructures[s]);
-                    if (structure) {
-                        tower[s].repair(structure);
-                        if (structure.hits === structure.hitsMax) {
-                            Memory.rooms[roomName].damagedStructures = _.without(Memory.rooms[roomName].damagedStructures, structure.id);
-                        } else {
-                            break;
-                        }
+                // Conduct Repairs as Secondary Priority
+            } else if (Memory.rooms[room.name].damagedStructures.length >= 0) {
+                let structure = Game.getObjectById(Memory.rooms[room.name].damagedStructures[s]);
+                if (structure) {
+                    towers[s].repair(structure);
+                    if (structure.hits === structure.hitsMax) {
+                        Memory.rooms[room.name].damagedStructures = _.without(Memory.rooms[room.name].damagedStructures, structure.id);
                     }
+                } else {
+                    //Conduct Reinforcement of Defences as Ternary Priority
+                    Reinforce(towers[s])
                 }
-            } else {
-                Reinforce(tower[0])
             }
         }
     }
