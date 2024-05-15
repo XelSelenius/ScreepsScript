@@ -25,6 +25,8 @@ global.WithdrawFromStorage = WithdrawFromStorage;
 global.SupplyCreep = SupplyCreep;
 global.SupplyFactory = SupplyFactory;
 global.SupplyTerminal = SupplyTerminal;
+global.SupplyLabsEnergy = SupplyLabsEnergy;
+global.SupplyPowerSpawn = SupplyPowerSpawn;
 
 const TRANSFER_PATH = {visualizePathStyle: {stroke: '#0005a7'}};
 const WITHDRAW_PATH = {visualizePathStyle: {stroke: '#f9fd00'}};
@@ -46,12 +48,12 @@ function WithdrawEnergy(creep, container, resource = RESOURCE_ENERGY) {
 /**
  * Universal TransferToReceiver of Energy between two Objects (Creeps or Structures)
  * @param creep - This is usually the Creep that can move towards the Provider.
- * @param provider - In most cases that would be a Structure. Sometimes it can be a stationary Creep as well [like Upgrader or Harvester].
+ * @param receiver - In most cases that would be a Structure. Sometimes it can be a stationary Creep as well [like Upgrader or Harvester].
  * @param resource
  */
-function TransferEnergy(creep, provider, resource = RESOURCE_ENERGY) {
-    if (creep.transfer(provider, resource) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(provider, TRANSFER_PATH);
+function TransferEnergy(creep, receiver, resource = RESOURCE_ENERGY) {
+    if (creep.transfer(receiver, resource) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(receiver, TRANSFER_PATH);
     }
 }
 
@@ -165,12 +167,17 @@ function RechargeLink(creep) {
  * If nothing passes through the other 3 functions, everything goes into the storage.
  * @param creep
  * @param room
+ * @param resource
  */
-function RechargeStorage(creep, room) {
+function RechargeStorage(creep, room, resource) {
     let storage = room.storage;
     if (storage) {
-        for (let resource in creep.store) {
+        if (resource) {
             TransferEnergy(creep, storage, resource)
+        } else {
+            for (let mineral in creep.store) {
+                TransferEnergy(creep, storage, mineral)
+            }
         }
     }
 }
@@ -259,16 +266,16 @@ function WithdrawFromCreep(creep, role) {
 /**
  * Withdraws from Any container closest by path
  * @param creep
- * @param resource
  */
-function WithdrawFromNonEmptyContainer(creep, resource) {
-    let allNonemptyContainers = creep.room.find(FIND_STRUCTURES, {
+function WithdrawFromNonEmptyContainer(creep) {
+    let allNonemptyContainers = creep.pos.findInRange(FIND_STRUCTURES, 2, {
         filter: structure => structure.structureType === STRUCTURE_CONTAINER
             && structure.store.getUsedCapacity() > 0
     });
     if (allNonemptyContainers.length > 0) {
         let container = creep.pos.findClosestByPath(allNonemptyContainers);
-        WithdrawEnergy(creep, container, resource);
+        for (let resource in container.store)
+            WithdrawEnergy(creep, container, resource);
     }
 }
 
@@ -333,14 +340,12 @@ function SupplyCreep(creep, role) {
  * @param resource
  */
 function SupplyFactory(creep, resource) {
-    if (creep.room.controller.level < 7) {
-        return;
-    }
     let factory = creep.room.find(FIND_MY_STRUCTURES, {
         filter: structure => structure.structureType === STRUCTURE_FACTORY
     });
-    if (factory !== null) {
-        TransferEnergy(creep, factory, resource);
+    if (factory.length > 0) {
+        creep.say('🔄 F')
+        TransferEnergy(creep, factory[0], resource);
     }
 }
 
@@ -353,8 +358,44 @@ function SupplyTerminal(creep, resource) {
     let terminal = creep.room.find(FIND_MY_STRUCTURES, {
         filter: structure => structure.structureType === STRUCTURE_TERMINAL
     });
-    if (terminal !== null) {
-        TransferEnergy(creep, terminal, resource);
+    if (terminal.length > 0) {
+        creep.say('🔄 Market')
+        TransferEnergy(creep, terminal[0], resource);
+    }
+}
+
+/**
+ * Supplies all labs with Energy Only. The rest will be in the Lab Manager
+ * @param creep
+ */
+function SupplyLabsEnergy(creep) {
+    let allLabs = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_LAB
+            && structure.store[RESOURCE_ENERGY] < LAB_ENERGY_CAPACITY
+    });
+    allLabs.sort();
+    for (let lab of allLabs) {
+        creep.say('Lab')
+        TransferEnergy(creep, lab, RESOURCE_ENERGY)
+    }
+}
+
+/**
+ * Power Spawn requires both Power and Energy. This function Provides both if asked for.
+ * @param creep
+ * @param resource
+ */
+function SupplyPowerSpawn(creep, resource) {
+    let powerSpawn = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_POWER_SPAWN
+    });
+    if (powerSpawn.length > 0) {
+        if (powerSpawn[0].store[RESOURCE_POWER] <= POWER_SPAWN_POWER_CAPACITY) {
+            creep.say('🔄 Power')
+            TransferEnergy(creep, powerSpawn[0], resource);
+        } else {
+            return true;
+        }
     }
 }
 
