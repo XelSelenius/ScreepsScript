@@ -4,23 +4,23 @@ let roleHauler = {
     run: function (creep) {
         setHaulerParameter(creep)
         if (creep.memory.hauling) {
-            if (RechargeSpawn(creep)) {
-                if (RechargeExtension(creep)) {
+            if (RechargeExtension(creep)) {
+                if (RechargeSpawn(creep)) {
                     if (RechargeTower(creep)) {
-                        let container = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 5, {
-                            filter: s => s.structureType === STRUCTURE_CONTAINER
-                        });
-                        if (container.length > 0 && container[0].store[RESOURCE_ENERGY] < CONTAINER_CAPACITY) {
-                            TransferEnergy(creep, container[0]);
+                        RechargeControllerContainer(creep);
+                        if (creep.room.controller.level === 8) {
+                            SupplyLabsEnergy(creep)
+                            RechargeNuke(creep);
+                            SupplyPowerSpawn(creep, RESOURCE_ENERGY);
                         }
                     }
                 }
             }
         } else {
             if (creep.room.storage) {
-                WithdrawFromStorage(creep);
+                WithdrawFromStorage(creep, creep.room);
             } else {
-                WithdrawFromContainer(creep);
+                WithdrawFromEnergySourceContainer(creep);
             }
         }
     }

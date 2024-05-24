@@ -227,6 +227,15 @@ function RechargeCreep(creep, store = 'S') {
                 WithdrawEnergy(creep, creep.pos.findClosestByPath(link));
             }
             break;
+        case 'T':
+            let terminal = creep.room.find(FIND_MY_STRUCTURES, {
+                filter: terminal => terminal.structureType === STRUCTURE_TERMINAL
+                    && terminal.store[RESOURCE_ENERGY] > 0
+            });
+            if (terminal.length > 0) {
+                WithdrawEnergy(creep, terminal[0], RESOURCE_ENERGY);
+            }
+            break;
         case 'M':
             Mine(creep);
     }
@@ -346,6 +355,8 @@ function SupplyFactory(creep, resource) {
     if (factory.length > 0) {
         creep.say('🔄 F')
         TransferEnergy(creep, factory[0], resource);
+    } else {
+        RechargeStorage(creep, creep.room)
     }
 }
 
@@ -361,6 +372,8 @@ function SupplyTerminal(creep, resource) {
     if (terminal.length > 0) {
         creep.say('🔄 Market')
         TransferEnergy(creep, terminal[0], resource);
+    } else {
+        RechargeStorage(creep, creep.room)
     }
 }
 

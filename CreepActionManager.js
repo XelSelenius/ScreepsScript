@@ -11,9 +11,11 @@ global.Tombraiding = Tombraiding;
 global.ConductCollection = ConductCollection;
 global.ReserveController = ReserveController;
 global.ClaimController = ClaimController;
+global.DeliverPower = DeliverPower;
 global.Attack = Attack;
 global.Defend = Defend;
 global.extendCreepLifespan = extendCreepLifespan;
+global.powerBankRobbery = powerBankRobbery;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -192,7 +194,17 @@ function Tombraiding(creep) {
         RechargeStorage(creep, creep.room);
 
         if (creep.store.getUsedCapacity() === 0)
-            creep.moveTo(new RoomPosition(15, 40, creep.room.name))
+            switch (creep.room.name){
+                case"W59S4":
+                    creep.moveTo(new RoomPosition(22, 32, creep.room.name))
+                    break;
+                case"W59S5":
+                    creep.moveTo(new RoomPosition(11, 23, creep.room.name))
+                    break;
+                case"W59S3":
+                    creep.moveTo(new RoomPosition(25, 25, creep.room.name))
+                    break;
+            }
     }
 }
 
@@ -218,8 +230,17 @@ function ConductCollection(creep) {
         creep.say('🔄 Idle');
         RechargeStorage(creep, creep.room);
         if (creep.store.getUsedCapacity() === 0)
-            creep.moveTo(new RoomPosition(13, 40, creep.room.name));
-    }
+            switch (creep.room.name){
+                case"W59S4":
+                    creep.moveTo(new RoomPosition(22, 30, creep.room.name))
+                    break;
+                case"W59S5":
+                    creep.moveTo(new RoomPosition(10, 23, creep.room.name))
+                    break;
+                case"W59S3":
+                    creep.moveTo(new RoomPosition(26, 26, creep.room.name))
+                    break;
+            }    }
 }
 
 /**
@@ -269,6 +290,20 @@ function ClaimController(creep) {
     }
 }
 
+function DeliverPower(creep) {
+    if (creep.room.name === "W59S4") {
+        let powerSpawn = creep.room.find(FIND_STRUCTURES, {
+            filter: s => s.structureType === STRUCTURE_POWER_SPAWN
+        });
+        if (creep.store.getUsedCapacity(RESOURCE_POWER) === 0
+            && powerSpawn[0].store[RESOURCE_ENERGY] === 5000
+            && powerSpawn[0].store[RESOURCE_POWER] === 0) {
+            creep.say("goPower")
+            WithdrawEnergy(creep, creep.room.terminal, RESOURCE_POWER);
+        }
+    }
+}
+
 //incomplete
 
 function Attack(creep, hostiles) {
@@ -278,6 +313,7 @@ function Attack(creep, hostiles) {
         creep.moveTo(hostiles[0], {visualizePathStyle: {stroke: '#ff0000'}});
     }
 }
+
 function Defend(creep, hostiles) {
     let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
     let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
@@ -304,6 +340,7 @@ function Defend(creep, hostiles) {
         }
     }
 }
+
 function extendCreepLifespan(creep) {
     // Check if the creep needs healing
     if (creep.hits < creep.hitsMax) {
@@ -330,5 +367,52 @@ function extendCreepLifespan(creep) {
             // No healers nearby to extend the creep's lifespan
             console.log(`No healers found nearby to extend the lifespan of ${creep.name}`);
         }
+    }
+}
+
+
+//TODO: Implement powerbank robbery
+// Define a function to check if the adjacent room has a power bank
+function hasPowerBank(roomName) {
+    let room = Game.rooms[roomName];
+    if (!room) return false; // Room not visible, can't determine
+    let structures = room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_POWER_BANK
+    });
+    return structures.length > 0;
+}
+
+// Define a function to direct the creep towards the power bank
+function directToPowerBank(creep, roomName) {
+    let exitDir = Game.map.findExit(creep.room.name, roomName);
+    let exit = creep.pos.findClosestByPath(exitDir);
+    if (exit) {
+        creep.moveTo(exit);
+    } else {
+        console.log(`Unable to find path to room ${roomName}`);
+    }
+}
+
+function powerBankRobbery(creep) {
+    // Assuming you have an observer structure stored in the variable observer
+    let observer = Game.getObjectById("6612807d4b090f1095ccb32a");
+    let roomName = 'W60S4';
+
+    if (observer) {
+        let result = observer.observeRoom(roomName);
+        if (result === OK) {
+            console.log(`Observing room ${roomName}`);
+            if (hasPowerBank(roomName)) {
+                console.log(`Power bank detected in room ${roomName}`);
+                // Assuming you have a creep stored in the variable 'creep'
+                directToPowerBank(creep, roomName);
+            } else {
+                console.log(`No power bank detected in room ${roomName}`);
+            }
+        } else {
+            console.log(`Failed to observe room ${roomName}: ${result}`);
+        }
+    } else {
+        console.log("No observer found.");
     }
 }

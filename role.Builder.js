@@ -1,3 +1,6 @@
+require('EnergyGridManager');
+require('CreepActionManager');
+
 let roleBuilder = {
 
     /** @param {Creep} creep **/
