@@ -14,6 +14,7 @@ let roleTombraider = require('role.Tombraider');
 let roleRanger = require('role.Ranger');
 let roleCarrier = require('role.Carrier');
 let roleManager = require('role.Manager');
+let roleMiner = require('role.Miner');
 
 const roomData = {
     'W59S4': {
@@ -34,6 +35,7 @@ const roomData = {
             // 'claimer': 1,
             'manager': 1,
             'carrier': 0,
+            'miner': 0,
             // Add more roles and counts as needed for the Room
         }
     },
@@ -44,7 +46,7 @@ const roomData = {
         'creepCounts': {
             'harvester': Memory.rooms['W59S5'].sourceIDs.length,
             'upgrader': 1,//Math.max(1, Game.rooms['W59S5'].storage.store[RESOURCE_ENERGY] / 100000),
-            // 'builder': 3,
+            'builder': 0,
             'hauler': 1,
             'collector': 1,
             'tombraider': 1,
@@ -61,7 +63,7 @@ const roomData = {
             'harvester': Memory.rooms['W59S3'].sourceIDs.length,
             'hauler': 1,
             'upgrader': 3,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
-            'builder': 0,
+            'builder': 1,
             'collector': 1,
             'tombraider': 1,
             'manager': 1,
@@ -109,7 +111,7 @@ function CreepDrivers() {
     }
 
     //Market Interface
-    Game.market.deal('', 2800, 'W59S4');
+    Game.market.deal('', 3000, 'W59S4');
 
     let powerSpawn = Game.getObjectById("66371beb7929396fee3bc5d4")
     if (powerSpawn.store[RESOURCE_ENERGY] > 0 && powerSpawn.store[RESOURCE_POWER] > 0) {
@@ -131,6 +133,7 @@ function CreepDrivers() {
         'ranger': roleRanger,
         'carrier': roleCarrier,
         'manager': roleManager,
+        'miner': roleMiner,
     };
 
     // Initialize the Role of each Creep

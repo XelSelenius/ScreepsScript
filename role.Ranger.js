@@ -1,5 +1,3 @@
-require('Utils')
-
 const roleRanger = {
     /** @param {Creep} creep **/
     run: function (creep) {

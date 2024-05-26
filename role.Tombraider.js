@@ -6,10 +6,39 @@ const roleTombraider = {
         if (creep.memory.looting) {
             creep.say('🚧 Loot');
             Tombraiding(creep);
+            let mineral = creep.room.find(FIND_MINERALS)
+            let mineralContainer = mineral[0].pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: s => s.structureType === STRUCTURE_CONTAINER
+            });
+            let resource;
+            switch (mineral[0].mineralType) {
+                case 'Z':
+                    resource = RESOURCE_ZYNTHIUM;
+                    break;
+                case 'H':
+                    resource = RESOURCE_HYDROGEN;
+                    break;
+                case 'O':
+                    resource = RESOURCE_OXYGEN;
+                    break;
+            }
+            if (mineralContainer.length > 0 && mineralContainer[0].store.getUsedCapacity() > 200) {
+                WithdrawEnergy(creep, mineralContainer[0], resource);
+            }
         } else {
             creep.say('🔄 Deploy');
-            RechargeStorage(creep);
+            RechargeStorage(creep, creep.room);
         }
+        // if (creep.room.energyAvailable <= 10000) {
+        //     if(creep.store.getUsedCapacity()===0){
+        //         WithdrawFromStorage(creep);
+        //         WithdrawFromContainer(creep);
+        //     } else{
+        //         RechargeExtension(creep);
+        //         RechargeSpawn(creep);
+        //         RechargeTower(creep);
+        //     }
+        // }
     }
 };
 

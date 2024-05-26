@@ -1,14 +1,14 @@
 require("lodash");
 
 //Global Functions and Constants
-global.RunReaction_OH = RunReaction_OH;
+global.ProcessReaction_OH = ProcessReaction_OH;
 global.SupplyLabMineral = SupplyLabMineral;
 global.WithdrawLabMineral = WithdrawLabMineral;
 
 /**
  * Runs basic Reaction
  */
-function RunReaction_OH() {
+function ProcessReaction_OH() {
     // Find labs in the room
     let lab_OH = Game.getObjectById("663965edf48de476a7806534")
     let lab_H = Game.getObjectById("661c080a84abd364af6a38aa")

@@ -15,7 +15,8 @@ global.DeliverPower = DeliverPower;
 global.Attack = Attack;
 global.Defend = Defend;
 global.extendCreepLifespan = extendCreepLifespan;
-global.powerBankRobbery = powerBankRobbery;
+global.PowerBankRobbery = PowerBankRobbery;
+global.CorridorMining = CorridorMining;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -29,9 +30,6 @@ const TOMBRAIDING_PATH = {visualizePathStyle: {stroke: '#000000'}};
 
 //Constants for this File
 const REINFORCE_LEVEL = 30000;
-const RAMPART = [
-    new RoomPosition(11, 19, Game.rooms['W59S4'].name),
-];
 
 /**
  * Balanced and Optimized function to Mine from Energy Source
@@ -194,7 +192,7 @@ function Tombraiding(creep) {
         RechargeStorage(creep, creep.room);
 
         if (creep.store.getUsedCapacity() === 0)
-            switch (creep.room.name){
+            switch (creep.room.name) {
                 case"W59S4":
                     creep.moveTo(new RoomPosition(22, 32, creep.room.name))
                     break;
@@ -230,7 +228,7 @@ function ConductCollection(creep) {
         creep.say('🔄 Idle');
         RechargeStorage(creep, creep.room);
         if (creep.store.getUsedCapacity() === 0)
-            switch (creep.room.name){
+            switch (creep.room.name) {
                 case"W59S4":
                     creep.moveTo(new RoomPosition(22, 30, creep.room.name))
                     break;
@@ -240,7 +238,8 @@ function ConductCollection(creep) {
                 case"W59S3":
                     creep.moveTo(new RoomPosition(26, 26, creep.room.name))
                     break;
-            }    }
+            }
+    }
 }
 
 /**
@@ -290,6 +289,10 @@ function ClaimController(creep) {
     }
 }
 
+/**
+ * Delivers Power to the PowerSpawn. Requires rework so to function more completely and smoothly.
+ * @param creep
+ */
 function DeliverPower(creep) {
     if (creep.room.name === "W59S4") {
         let powerSpawn = creep.room.find(FIND_STRUCTURES, {
@@ -304,8 +307,7 @@ function DeliverPower(creep) {
     }
 }
 
-//incomplete
-
+//TODO: Refactor this garbage of Attack and Defend or clean up the entire functions. 36 line of wasted data.
 function Attack(creep, hostiles) {
     console.log(`Hostiles: ${hostiles.length}`)
     // Attack the nearest hostile creep
@@ -341,6 +343,7 @@ function Defend(creep, hostiles) {
     }
 }
 
+//TODO: Make it work
 function extendCreepLifespan(creep) {
     // Check if the creep needs healing
     if (creep.hits < creep.hitsMax) {
@@ -370,47 +373,87 @@ function extendCreepLifespan(creep) {
     }
 }
 
-
-//TODO: Implement powerbank robbery
-// Define a function to check if the adjacent room has a power bank
-function hasPowerBank(roomName) {
+/**
+ * Detector for any structure that is seeked after.
+ * @param roomName
+ * @param structure_const
+ */
+function HasStructure(roomName, structure_const) {
     let room = Game.rooms[roomName];
     if (!room) return false; // Room not visible, can't determine
     let structures = room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_POWER_BANK
+        filter: structure => structure.structureType === structure_const
     });
-    return structures.length > 0;
-}
-
-// Define a function to direct the creep towards the power bank
-function directToPowerBank(creep, roomName) {
-    let exitDir = Game.map.findExit(creep.room.name, roomName);
-    let exit = creep.pos.findClosestByPath(exitDir);
-    if (exit) {
-        creep.moveTo(exit);
-    } else {
-        console.log(`Unable to find path to room ${roomName}`);
+    if (structures.length > 0) {
+        return structures[0];
     }
 }
 
-function powerBankRobbery(creep) {
-    // Assuming you have an observer structure stored in the variable observer
+/**
+ * Detector for Deposits in a given Corridor Room.
+ * To be reworked to feature an array of rooms.
+ * @param roomName
+ */
+function HasDeposit(roomName) {
+    let room = Game.rooms[roomName];
+    if (!room) return false; // Room not visible, can't determine
+    let deposits = room.find(FIND_DEPOSITS)
+    if (deposits.length > 0) {
+        return deposits[0];
+    }
+}
+
+/**
+ * Functional Method for finding and sending creeps to attack a PowerBank.
+ * @param creep
+ * @param targetRoom
+ * @param structure_const
+ */
+function PowerBankRobbery(creep, targetRoom, structure_const) {
     let observer = Game.getObjectById("6612807d4b090f1095ccb32a");
-    let roomName = 'W60S4';
 
     if (observer) {
-        let result = observer.observeRoom(roomName);
+        let result = observer.observeRoom(targetRoom);
         if (result === OK) {
-            console.log(`Observing room ${roomName}`);
-            if (hasPowerBank(roomName)) {
-                console.log(`Power bank detected in room ${roomName}`);
-                // Assuming you have a creep stored in the variable 'creep'
-                directToPowerBank(creep, roomName);
+            console.log(`Observing room ${targetRoom}`);
+            let structure = HasStructure(targetRoom, structure_const);
+            if (structure) {
+                console.log(`Power bank detected in room ${targetRoom}: x:${structure.pos.x}, y:${structure.pos.y}`);
+                let position = new RoomPosition(structure.pos.x, structure.pos.y, targetRoom.name);
+                creep.moveTo(position, MINE_PATH);
+                creep.attack(structure);
             } else {
-                console.log(`No power bank detected in room ${roomName}`);
+                console.log(`No power bank detected in room ${targetRoom}`);
             }
         } else {
-            console.log(`Failed to observe room ${roomName}: ${result}`);
+            console.log(`Failed to observe room ${targetRoom}: ${result}`);
+        }
+    } else {
+        console.log("No observer found.");
+    }
+}
+
+/**
+ * Functional Corridor Mining operator.
+ * @param creep
+ * @param targetRoom
+ */
+function CorridorMining(creep, targetRoom) {
+    let observer = Game.getObjectById("6612807d4b090f1095ccb32a");
+    if (observer) {
+        let result = observer.observeRoom(targetRoom);
+        if (result === OK) {
+            let deposit = HasDeposit(targetRoom);
+            if (deposit) {
+                console.log(`Deposit detected in room ${targetRoom}: x:${deposit.pos.x}, y:${deposit.pos.y}`);
+                let position = new RoomPosition(deposit.pos.x, deposit.pos.y, targetRoom);
+                creep.moveTo(position, MINE_PATH);
+                creep.harvest(deposit);
+            } else {
+                console.log(`No deposits detected in room ${targetRoom}`);
+            }
+        } else {
+            console.log(`Failed to observe room ${targetRoom}: ${result}`);
         }
     } else {
         console.log("No observer found.");
