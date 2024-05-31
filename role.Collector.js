@@ -8,27 +8,31 @@ let roleCollector = {
 
         if (creep.memory.collecting) {
             creep.say('🔄 Collecting');
+            if (creep.ticksToLive <= 50) {
+                creep.suicide();
+            }
+
+            //Choose Activity
             ConductCollection(creep);
-            DeliverPower(creep)
-            Salvage(creep)
+            // WithdrawFromEnergySourceContainer(creep);
+            // DeliverPower(creep)
+            Salvage(creep, RESOURCE_KEANIUM)
         } else {
             creep.say('🔄 Deploy');
             if (creep.store[RESOURCE_POWER]) {
                 SupplyPowerSpawn(creep, RESOURCE_POWER);
             } else {
-                // SupplyPowerSpawn(creep,RESOURCE_ENERGY)
                 RechargeStorage(creep, creep.room);
             }
         }
 
-        // if (creep.room.energyAvailable <= 10000) {
+        // if (creep.room.energyAvailable <= 1000) {
         //     if(creep.store.getUsedCapacity()===0){
         //         WithdrawFromStorage(creep, creep.room, RESOURCE_ENERGY);
-        //         // WithdrawFromContainer(creep);
         //     } else{
         //         RechargeExtension(creep);
-                // RechargeSpawn(creep);
-        //         // RechargeTower(creep);
+        //         RechargeSpawn(creep);
+        //         RechargeTower(creep);
         //     }
         // }
     }

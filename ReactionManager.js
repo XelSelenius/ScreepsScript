@@ -2,6 +2,7 @@ require("lodash");
 
 //Global Functions and Constants
 global.ProcessReaction_OH = ProcessReaction_OH;
+global.ProcessReaction_ZH20 = ProcessReaction_ZH20;
 global.SupplyLabMineral = SupplyLabMineral;
 global.WithdrawLabMineral = WithdrawLabMineral;
 
@@ -38,12 +39,18 @@ function ProcessReaction_OH() {
     }
 }
 
+function ProcessReaction_ZH20(){
+    let lab_Compound = Game.getObjectById("66189963dd2e5f18cba1a7bb")
+    let lab_OH2=Game.getObjectById('660c8e2de8810c3e9ac686c1');
+    let lab_CompoundOH=Game.getObjectById('662439aacc0d268d35dbd4b4');
+
+    let result = lab_CompoundOH.runReaction(lab_Compound, lab_OH2);
+}
 function SupplyLabMineral(creep, lab, resource) {
     if (creep.store[resource]) {
         TransferEnergy(creep, lab, resource)
     } else {
-        WithdrawEnergy(creep, Game.getObjectById('65d71e80e4219d254f628572'), resource)
-        // WithdrawEnergy(creep, creep.room.storage, resource)
+        WithdrawEnergy(creep, Game.getObjectById('65d72196e456720d57347646'), resource)
     }
 }
 

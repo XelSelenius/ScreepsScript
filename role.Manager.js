@@ -8,7 +8,9 @@ let roleManager = {
         let TERMINAL_ENERGY = 25000;
 
         let storage = creep.room.storage;
-
+        if (storage.store[RESOURCE_ENERGY] > 950000) {
+            TERMINAL_ENERGY = 100000;
+        }
         let factory = creep.room.find(FIND_MY_STRUCTURES, {
             filter: s => s.structureType === STRUCTURE_FACTORY
         })[0];
@@ -36,13 +38,16 @@ let roleManager = {
         if (creep.memory.managing) {
             switch (Object.keys(creep.store)[0]) {
                 case RESOURCE_ZYNTHIUM:
-                    SupplyFactory(creep, RESOURCE_ZYNTHIUM);
+                    SupplyTerminal(creep, RESOURCE_ZYNTHIUM);
                     break;
                 case RESOURCE_HYDROGEN:
-                    SupplyFactory(creep, RESOURCE_HYDROGEN);
+                    SupplyTerminal(creep, RESOURCE_HYDROGEN);
                     break;
                 case RESOURCE_OXYGEN:
-                    SupplyFactory(creep, RESOURCE_OXYGEN);
+                    SupplyTerminal(creep, RESOURCE_OXYGEN);
+                    break;
+                case RESOURCE_LEMERGIUM:
+                    SupplyTerminal(creep, RESOURCE_LEMERGIUM);
                     break;
                 case RESOURCE_ZYNTHIUM_HYDRIDE:
                     SupplyTerminal(creep, RESOURCE_ZYNTHIUM_HYDRIDE);
@@ -65,11 +70,23 @@ let roleManager = {
                 case RESOURCE_ZYNTHIUM_BAR:
                     SupplyTerminal(creep, RESOURCE_ZYNTHIUM_BAR);
                     break;
+                case RESOURCE_LEMERGIUM_BAR:
+                    SupplyTerminal(creep, RESOURCE_ZYNTHIUM_BAR);
+                    break;
                 case RESOURCE_POWER:
                     SupplyTerminal(creep, RESOURCE_POWER);
                     break;
                 case RESOURCE_HYDROXIDE:
                     SupplyTerminal(creep, RESOURCE_HYDROXIDE);
+                    break;
+                case RESOURCE_ZYNTHIUM_ACID:
+                    SupplyTerminal(creep, RESOURCE_ZYNTHIUM_ACID);
+                    break;
+                case RESOURCE_UTRIUM_ACID:
+                    SupplyTerminal(creep, RESOURCE_UTRIUM_ACID);
+                    break;
+                case RESOURCE_KEANIUM_ALKALIDE:
+                    SupplyTerminal(creep, RESOURCE_KEANIUM_ALKALIDE);
                     break;
                 case RESOURCE_ENERGY:
                     if (factory && factory.store[RESOURCE_ENERGY] < FACTORY_ENERGY) {
@@ -79,6 +96,9 @@ let roleManager = {
                     } else {
                         RechargeStorage(creep, creep.room, RESOURCE_ENERGY);
                     }
+                    break;
+                case RESOURCE_METAL:
+                    SupplyTerminal(creep, RESOURCE_METAL);
                     break;
             }
         } else {
@@ -101,13 +121,21 @@ let roleManager = {
             if (factory && factory.store[RESOURCE_ZYNTHIUM_BAR]) {
                 WithdrawEnergy(creep, factory, RESOURCE_ZYNTHIUM_BAR);
             }
-            if (factory && factory.store[RESOURCE_OXIDANT]) {
-                WithdrawEnergy(creep, factory, RESOURCE_OXIDANT);
+            if (factory && factory.store[RESOURCE_OXYGEN]) {
+                WithdrawEnergy(creep, factory, RESOURCE_OXYGEN);
             }
             if (factory && factory.store[RESOURCE_REDUCTANT]) {
                 WithdrawEnergy(creep, factory, RESOURCE_REDUCTANT);
             }
+            if (terminal && terminal.store[RESOURCE_LEMERGIUM]) {
+                WithdrawEnergy(creep, terminal, RESOURCE_LEMERGIUM)
+            }
+
             WithdrawFromNonEmptyContainer(creep)
+            // if (creep.room.storage.store[RESOURCE_ENERGY] > 900000){
+            //     WithdrawFromStorage(creep, creep.room)
+            //     SupplyTerminal(creep,RESOURCE_ENERGY)
+            // }
         }
     }
 };
@@ -123,6 +151,6 @@ function setManagerParameter(creep) {
     // Reverse - if Energy Capacity is full, stop harvesting and go build
     if (!creep.memory.managing && creep.store.getUsedCapacity() > 0) {
         creep.memory.managing = true;
-        creep.say('🚧 Manage');
+        creep.say('🚧 Storage');
     }
 }

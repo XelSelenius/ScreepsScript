@@ -15,12 +15,15 @@ let roleRanger = require('role.Ranger');
 let roleCarrier = require('role.Carrier');
 let roleManager = require('role.Manager');
 let roleMiner = require('role.Miner');
+let roleHealer = require('role.Healer');
+let roleAttacker = require('role.Attacker');
+let roleColonizer = require('role.Colonizer');
 
 const roomData = {
     'W59S4': {
         'name': 'W59S4',
         'factory': RESOURCE_ZYNTHIUM_BAR,
-        'spawner': 'Xel\'Invictus Primus',
+        'spawner': `Xel'Invictus Primus`,
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
             // 'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 20),
@@ -29,19 +32,23 @@ const roomData = {
             'hauler': 1,
             'collector': 1,
             'tombraider': 1,
-            'supplier': 0,
+            // 'supplier': 1,
             // 'defender': 1,
             // 'ranger': 1,
             // 'claimer': 1,
             'manager': 1,
             'carrier': 0,
-            'miner': 0,
+            // 'miner': 1,
+            // 'healer': 1,
+            // 'attacker': 1,
             // Add more roles and counts as needed for the Room
-        }
+        },
+        'walls': 30000,
+        'ramparts': 30000,
     },
     'W59S5': {
         'name': 'W59S5',
-        'factory': RESOURCE_REDUCTANT,
+        'factory': '',
         'spawner': `Xel'Hydrogenius`,
         'creepCounts': {
             'harvester': Memory.rooms['W59S5'].sourceIDs.length,
@@ -53,22 +60,42 @@ const roomData = {
             'manager': 1,
             // 'carrier': 0,
             // Add more roles and counts as needed for the Room
-        }
+        },
+        'walls': 30000,
+        'ramparts': 30000,
     },
     'W59S3': {
         'name': 'W59S3',
-        'factory': RESOURCE_OXIDANT,
+        'factory': RESOURCE_LEMERGIUM_BAR,
         'spawner': `Xel'Aurelius Primus`,
         'creepCounts': {
             'harvester': Memory.rooms['W59S3'].sourceIDs.length,
             'hauler': 1,
             'upgrader': 3,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
-            'builder': 1,
+            'builder': 0,
             'collector': 1,
             'tombraider': 1,
             'manager': 1,
             'carrier': 0,
+            // 'colonizer': 2,
         },
+        'walls': 40000,
+        'ramparts': 30000,
+    },
+    'W59S7': {
+        'name': 'W59S7',
+        'spawner': `Xel'Gildeon Primus`,
+        'creepCounts': {
+            'harvester': Memory.rooms['W59S7'].sourceIDs.length,
+            'upgrader': 3,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
+            'hauler': 2,
+            // 'builder': 2,
+            'tombraider': 3,
+            'collector': 3,
+
+        },
+        'walls': 500,
+        'ramparts': 800,
     },
     // Add more rooms as needed
 };
@@ -99,6 +126,7 @@ function CreepDrivers() {
     //ProcessDrivers
     ProcessLinkTransfer();
     ProcessReaction_OH();
+    ProcessReaction_ZH20();
     for (let roomName in roomData) {
         //MemoryDrivers
         MemoriseDamagedStructures(roomName);
@@ -111,7 +139,8 @@ function CreepDrivers() {
     }
 
     //Market Interface
-    Game.market.deal('', 3000, 'W59S4');
+    Game.market.deal('', 1700, 'W59S5');
+    // Game.getObjectById('6644e2f8ce89aa5adf869f8b').send(RESOURCE_ENERGY, 22000, 'W59S5');
 
     let powerSpawn = Game.getObjectById("66371beb7929396fee3bc5d4")
     if (powerSpawn.store[RESOURCE_ENERGY] > 0 && powerSpawn.store[RESOURCE_POWER] > 0) {
@@ -134,6 +163,9 @@ function CreepDrivers() {
         'carrier': roleCarrier,
         'manager': roleManager,
         'miner': roleMiner,
+        'healer': roleHealer,
+        'attacker': roleAttacker,
+        'colonizer': roleColonizer,
     };
 
     // Initialize the Role of each Creep
@@ -320,7 +352,7 @@ function TowerDriver(room) {
                     }
                 } else {
                     //Conduct Reinforcement of Defences as Ternary Priority
-                    Reinforce(towers[s])
+                    Reinforce(towers[s], roomData[room.name].walls, roomData[room.name].ramparts);
                 }
             }
         }

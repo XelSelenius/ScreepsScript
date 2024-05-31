@@ -17,6 +17,7 @@ global.Defend = Defend;
 global.extendCreepLifespan = extendCreepLifespan;
 global.PowerBankRobbery = PowerBankRobbery;
 global.CorridorMining = CorridorMining;
+global.HealCreep = HealCreep;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -61,16 +62,17 @@ function Mine(creep) {
 /**
  * Used for the purpose of draining energy from Ruins if present in the room.
  * @param creep
+ * @param resource
  */
-function Salvage(creep) {
+function Salvage(creep, resource) {
     //Find Ruins
     let ruins = creep.room.find(FIND_RUINS);
 
     //If Ruins in the room Exist, WithdrawEnergy existing Energy from them
     if (ruins.length > 0) {
         for (let ruin of ruins) {
-            if (ruin.store[RESOURCE_ENERGY] > 0) {
-                if (creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            if (ruin.store[resource] > 0) {
+                if (creep.withdraw(ruin, resource) === ERR_NOT_IN_RANGE) {
                     creep.moveTo(ruin, SALVAGE_PATH);
                 }
                 break;
@@ -84,15 +86,19 @@ function Salvage(creep) {
 /**
  * Reinforces Walls and Ramparts to hit points limited by the REINFORCE_LEVEL constant.
  * @param creep
+ * @param wallsHP
+ * @param rampartsHP
  */
-function Reinforce(creep) {
-    let defences = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => {
-            return (structure.structureType === STRUCTURE_WALL
-                    || structure.structureType === STRUCTURE_RAMPART)
-                && structure.hits < REINFORCE_LEVEL
-        }
+function Reinforce(creep, wallsHP, rampartsHP) {
+    let walls = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_WALL
+            && structure.hits < wallsHP
     });
+    let ramparts = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_RAMPART
+            && structure.hits < rampartsHP
+    });
+    let defences = walls.concat(ramparts);
     for (let structure of defences) {
         if (creep.repair(structure) === ERR_NOT_IN_RANGE) {
             creep.moveTo(structure, REINFORCE_PATH);
@@ -191,18 +197,22 @@ function Tombraiding(creep) {
         creep.say('🔄 Idle');
         RechargeStorage(creep, creep.room);
 
-        if (creep.store.getUsedCapacity() === 0)
+        if (creep.store.getUsedCapacity() === 0) {
             switch (creep.room.name) {
                 case"W59S4":
                     creep.moveTo(new RoomPosition(22, 32, creep.room.name))
                     break;
                 case"W59S5":
-                    creep.moveTo(new RoomPosition(11, 23, creep.room.name))
+                    creep.moveTo(new RoomPosition(7, 18, creep.room.name))
                     break;
                 case"W59S3":
                     creep.moveTo(new RoomPosition(25, 25, creep.room.name))
                     break;
+                case"W59S7":
+                    creep.moveTo(new RoomPosition(19, 22, creep.room.name))
+                    break;
             }
+        }
     }
 }
 
@@ -233,10 +243,13 @@ function ConductCollection(creep) {
                     creep.moveTo(new RoomPosition(22, 30, creep.room.name))
                     break;
                 case"W59S5":
-                    creep.moveTo(new RoomPosition(10, 23, creep.room.name))
+                    creep.moveTo(new RoomPosition(7, 20, creep.room.name))
                     break;
                 case"W59S3":
                     creep.moveTo(new RoomPosition(26, 26, creep.room.name))
+                    break;
+                case"W59S7":
+                    creep.moveTo(new RoomPosition(21, 22, creep.room.name))
                     break;
             }
     }
@@ -374,6 +387,35 @@ function extendCreepLifespan(creep) {
 }
 
 /**
+ * Healing a creep in a given room
+ * @param creep
+ * @param targetRoom
+ */
+function HealCreep(creep, targetRoom) {
+    // Ensure the target room is visible
+    if (!Game.rooms[targetRoom.name]) {
+        console.log(`Room ${targetRoom} is not visible.`);
+        return;
+    }
+
+    // Find the target creep in the specified room
+    let targetCreep = Game.rooms[targetRoom].find(FIND_MY_CREEPS);
+
+    if (targetCreep.length === 0) {
+        console.log(`No damaged creeps found in room ${targetRoom}.`);
+        return;
+    }
+
+    // Target the most damaged creep
+    let mostDamagedCreep = targetCreep[0];
+
+    // Move towards and heal the target creep
+    if (creep.heal(mostDamagedCreep) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(mostDamagedCreep, {visualizePathStyle: {stroke: '#00ff00'}});
+    }
+}
+
+/**
  * Detector for any structure that is seeked after.
  * @param roomName
  * @param structure_const
@@ -419,7 +461,7 @@ function PowerBankRobbery(creep, targetRoom, structure_const) {
             let structure = HasStructure(targetRoom, structure_const);
             if (structure) {
                 console.log(`Power bank detected in room ${targetRoom}: x:${structure.pos.x}, y:${structure.pos.y}`);
-                let position = new RoomPosition(structure.pos.x, structure.pos.y, targetRoom.name);
+                let position = new RoomPosition(structure.pos.x, structure.pos.y, targetRoom);
                 creep.moveTo(position, MINE_PATH);
                 creep.attack(structure);
             } else {
