@@ -17,10 +17,10 @@ let roleHauler = {
                 }
             }
         } else {
-            if (creep.room.storage) {
+            if (creep.room.storage.store[RESOURCE_ENERGY]) {
                 WithdrawFromStorage(creep, creep.room);
             } else {
-                WithdrawFromEnergySourceContainer(creep);
+                WithdrawFromTerminal(creep,creep.room, RESOURCE_ENERGY)
             }
         }
     }

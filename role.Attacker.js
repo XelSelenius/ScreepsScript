@@ -2,15 +2,8 @@ let roleAttacker = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
-        let origin = 'W59S4';
         let target = 'W60S4';
-        console.log(origin);
-        // setAttackerParameter(creep)
         PowerBankRobbery(creep, target, STRUCTURE_POWER_BANK);
-        // if (creep.memory.healing && creep.ticksToLive > 75) {
-        // } else {
-        //     RechargeStorage(creep, origin, RESOURCE_METAL);
-        // }
     }
 };
 

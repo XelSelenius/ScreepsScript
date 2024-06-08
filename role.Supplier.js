@@ -2,67 +2,174 @@ require('ReactionManager');
 
 let roleSupplier = {
 
-    /** @param {Creep} creep **/
-    run: function (creep) {
-        // setSupplierParameters(creep)
-        // RunReaction_OH(creep);
+    /** @param {Creep} creep *
+     * @param room
+     */
+    run: function (creep, room) {
+        //Commission the Labs in the room.
+        let labs = creep.room.find(FIND_MY_STRUCTURES, {
+            filter: {structureType: STRUCTURE_LAB}
+        });
 
-        let lab_OH = Game.getObjectById("663965edf48de476a7806534")
-        let lab_H = Game.getObjectById("661c080a84abd364af6a38aa")
-        let lab_O = Game.getObjectById("6612f415dab103865daf1104")
+        let RoomLabs = RoomLabsClassification(labs);
 
-        let lab_Compound = Game.getObjectById("66189963dd2e5f18cba1a7bb")
-        let lab_OH2=Game.getObjectById('660c8e2de8810c3e9ac686c1');
-        let lab_CompoundOH=Game.getObjectById('662439aacc0d268d35dbd4b4');
+        room = room[creep.room.name];
 
-        // Check if the labs have the required resources
-        // if (lab_O.mineralAmount <= (LAB_MINERAL_CAPACITY - 200)) {
-        //     SupplyLabMineral(creep, lab_O, RESOURCE_OXYGEN)
-        // }
+        let StatusObserver = {
+            'Lab1': RoomLabs.Lab1.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            'Lab2': RoomLabs.Lab2.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            'Lab3': RoomLabs.Lab3.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            'Lab4': RoomLabs.Lab4.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            // 'Lab5': RoomLabs.Lab5.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            // 'Lab6': RoomLabs.Lab6.mineralAmount <= LAB_MINERAL_CAPACITY - 200,
+            'Reaction1': RoomLabs.Reaction1.mineralAmount >= 200,
+            'Reaction2': RoomLabs.Reaction2.mineralAmount >= 200,
+        };
 
-        // if (lab_Compound.mineralAmount <= (LAB_MINERAL_CAPACITY - 200)) {
-        //     SupplyLabMineral(creep, lab_Compound, RESOURCE_UTRIUM_HYDRIDE)
-        // }
+        RunReaction1(RoomLabs, creep.room)
+        RunReaction2(RoomLabs, creep.room)
 
-        // if (lab_Compound.mineralAmount <= (LAB_MINERAL_CAPACITY - 200)) {
-        //     SupplyLabMineral(creep, lab_Compound, RESOURCE_GHODIUM_OXIDE)
-        // }
-
-        // if (lab_OH2.mineralAmount <= (LAB_MINERAL_CAPACITY - 200)) {
-        //     SupplyLabMineral(creep, lab_OH2, RESOURCE_HYDROXIDE)
-        // }
-        // WithdrawEnergy(creep,lab_Compound,RESOURCE_KEANIUM_ALKALIDE)
-        // RechargeStorage(creep,creep.room,RESOURCE_UTRIUM_HYDRIDE)
-        // if (lab_H.mineralAmount <= (LAB_MINERAL_CAPACITY - 200)) {
-        //     SupplyLabMineral(creep, lab_H, RESOURCE_HYDROGEN)
-        // }
-
-        // if (lab_OH.mineralAmount >= 200) {
-        //     WithdrawLabMineral(creep, lab_OH, RESOURCE_HYDROXIDE)
-        // } else {
-        //     RechargeStorage(creep, creep.room, RESOURCE_HYDROXIDE)
-        // }
-
-        // if (lab_CompoundOH.mineralAmount >= 200) {
-        //     WithdrawLabMineral(creep, lab_CompoundOH, RESOURCE_UTRIUM_ACID)
-        // } else {
-        //     RechargeStorage(creep, creep.room, RESOURCE_UTRIUM_ACID)
-        // }
-    }
-};
-
-module.exports = roleSupplier;
-
-function setSupplierParameters(creep) {
-    // Check Energy Capacity - if none, stop supplying and go harvest
-    if (creep.memory.suppling && creep.store.getUsedCapacity() === 0) {
-        creep.memory.suppling = false;
-        creep.say('🔄 Recharge');
-    }
-    // Reverse - if Energy Capacity is full, stop harvesting and go build
-    if (!creep.memory.suppling && creep.store.getFreeCapacity() === 0) {
-        creep.memory.suppling = true;
-        creep.say('⚡ Supply');
+        if (StatusObserver.Lab1) {
+            console.log(room.reactions.Lab1)
+            if (creep.store[room.reactions.Lab1] === 0) {
+                WithdrawFromTerminal(creep, creep.room, room.reactions.Lab1);
+            } else if(creep.store[room.reactions.Lab1]){
+                TransferEnergy(creep, RoomLabs.Lab1, room.reactions.Lab1);
+            }
+        } else if (StatusObserver.Lab2) {
+            if (creep.store[room.reactions.Lab2] === 0) {
+                WithdrawFromTerminal(creep, creep.room, room.reactions.Lab2);
+            } else if(creep.store[room.reactions.Lab2]){
+                TransferEnergy(creep, RoomLabs.Lab2, room.reactions.Lab2);
+            }
+        } else if (StatusObserver.Lab3) {
+            if (creep.store[room.reactions.Lab3] === 0) {
+                WithdrawFromTerminal(creep, creep.room, room.reactions.Lab3);
+            } else {
+                TransferEnergy(creep, RoomLabs.Lab3, room.reactions.Lab3);
+            }
+        } else if (StatusObserver.Lab4) {
+            if (creep.store[room.reactions.Lab4] === 0) {
+                WithdrawFromTerminal(creep, creep.room, room.reactions.Lab4);
+            } else {
+                TransferEnergy(creep, RoomLabs.Lab4, room.reactions.Lab4);
+            }
+        } else if (StatusObserver.Reaction1) {
+            if (creep.store.getFreeCapacity() === 0) {
+                RechargeStorage(creep, creep.room);
+            } else {
+                WithdrawEnergy(creep, RoomLabs.Reaction1, room.reactions.Reaction1);
+            }
+        } else if (StatusObserver.Reaction2) {
+            if (creep.store.getFreeCapacity() === 0) {
+                RechargeStorage(creep, creep.room);
+            } else {
+                WithdrawEnergy(creep, RoomLabs.Reaction2, room.reactions.Reaction2);
+            }
+        } else{
+            if (creep.store.getUsedCapacity() > 0) {
+                for (const resourceType in creep.store) {
+                    if (creep.store[resourceType] > 0) {
+                        SupplyTerminal(creep, resourceType);
+                    }
+                }
+            }
+        }
     }
 }
 
+module.exports = roleSupplier;
+
+function RoomLabsClassification(labs) {
+    let masterLab1;
+    let slaveLabs1;
+    let masterLab2;
+    let slaveLabs2;
+    let catalyzerLab1;
+    let catalyzerLab2;
+    let pre_catLabs;
+
+    // Helper function to remove a lab and its nearby labs from the list
+    const removeLabs = (labs, masterLab, slaveLabs) => {
+        const labIdsToRemove = new Set([masterLab.id, ...slaveLabs.map(lab => lab.id)]);
+        return labs.filter(lab => !labIdsToRemove.has(lab.id));
+    };
+
+    // // Find first catalyzer lab
+    // labs.forEach(lab => {
+    //     let nearbyLabs = labs.filter(otherLab => lab.pos.inRangeTo(otherLab, 1) && lab.id !== otherLab.id);
+    //     console.log(lab)
+    //     if (nearbyLabs.length >= 2 && !catalyzerLab1) {
+    //         catalyzerLab1 = lab;
+    //     }
+    // });
+    //
+    // // Remove the first catalyzer lab
+    // labs = labs.filter(lab => lab.id !== catalyzerLab1.id);
+    // console.log(`${catalyzerLab1} is fucked up`)
+
+    // // Find second catalyzer lab
+    // labs.forEach(lab => {
+    //     let nearbyLabs = labs.filter(otherLab => lab.pos.inRangeTo(otherLab, 1) && lab.id !== otherLab.id);
+    //     if (nearbyLabs.length >= 2 && !catalyzerLab2) {
+    //         catalyzerLab2 = lab;
+    //     }
+    // });
+    //
+    // // Remove the second catalyzer lab
+    // labs = labs.filter(lab => lab.id !== catalyzerLab2.id);
+
+    // Find first master lab and its slaves
+    labs.forEach(lab => {
+        let nearbyLabs = labs.filter(otherLab => lab.pos.inRangeTo(otherLab, 1) && lab.id !== otherLab.id);
+        if (nearbyLabs.length === 2 && !masterLab1) {
+            masterLab1 = lab;
+            slaveLabs1 = nearbyLabs.slice(0, 2);
+        }
+    });
+
+    // Remove the first master lab and its slaves
+    labs = removeLabs(labs, masterLab1, slaveLabs1);
+
+    // Find second master lab and its slaves
+    labs.forEach(lab => {
+        let nearbyLabs = labs.filter(otherLab => lab.pos.inRangeTo(otherLab, 1) && lab.id !== otherLab.id);
+        if (nearbyLabs.length === 2 && !masterLab2) {
+            masterLab2 = lab;
+            slaveLabs2 = nearbyLabs.slice(0, 2);
+        }
+    });
+
+    // Remove the second master lab and its slaves
+    labs = removeLabs(labs, masterLab2, slaveLabs2);
+
+    // // Remaining labs are slaveCatalyzerLabs
+    // pre_catLabs = labs;
+
+    return {
+        'Lab1': slaveLabs1[0],
+        'Lab2': slaveLabs1[1],
+        'Lab3': slaveLabs2[0],
+        'Lab4': slaveLabs2[1],
+        'Reaction1': masterLab1,
+        'Reaction2': masterLab2,
+        // 'Reaction3_1': catalyzerLab1,
+        // 'Reaction3_2': catalyzerLab2,
+        // 'Lab5': pre_catLabs[0] ? pre_catLabs[0] : null,
+        // 'Lab6': pre_catLabs[1] ? pre_catLabs[1] : null
+    };
+}
+
+function RunReaction1(RoomLabs, room) {
+    let reaction1 = RoomLabs.Reaction1.runReaction(RoomLabs.Lab1, RoomLabs.Lab2);
+    if (reaction1 === OK) {
+        console.log(`${room.name} Reaction 1 Initialized`)
+    }
+}
+
+function RunReaction2(RoomLabs, room) {
+    let reaction2 = RoomLabs.Reaction2.runReaction(RoomLabs.Lab3, RoomLabs.Lab4);
+    if (reaction2 === OK) {
+        console.log(`${room.name} Reaction 2 Initialized`)
+    }
+}

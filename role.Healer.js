@@ -3,7 +3,7 @@ let roleHealer = {
     /** @param {Creep} creep **/
     run: function (creep) {
         let origin = Game.rooms['W59S4'];
-        let target = 'W60S4';
+        let target = 'W59S4';
 
         HealCreep(creep,target);
         // setHealerParameter(creep)

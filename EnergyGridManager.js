@@ -11,6 +11,8 @@ global.RechargeContainer = RechargeContainer;
 global.RechargeTower = RechargeTower;
 global.RechargeLink = RechargeLink;
 global.RechargeStorage = RechargeStorage;
+global.RechargeFactory = RechargeFactory;
+global.RechargeTerminal = RechargeTerminal;
 global.RechargeNuke = RechargeNuke;
 global.RechargeCreep = RechargeCreep;
 global.RechargeControllerContainer = RechargeControllerContainer;
@@ -20,6 +22,8 @@ global.WithdrawFromCreep = WithdrawFromCreep;
 global.WithdrawFromNonEmptyContainer = WithdrawFromNonEmptyContainer;
 global.WithdrawFromEnergySourceContainer = WithdrawFromEnergySourceContainer;
 global.WithdrawFromStorage = WithdrawFromStorage;
+global.WithdrawFromTerminal = WithdrawFromTerminal;
+global.WithdrawFromFactory = WithdrawFromFactory;
 
 //Region 3 Supply Functions
 global.SupplyCreep = SupplyCreep;
@@ -187,7 +191,9 @@ function RechargeStorage(creep, room, resource) {
  * @param creep
  */
 function RechargeNuke(creep) {
-    let nuke = Game.getObjectById("6613931edd2e5f6ae6a07f59");
+    let nuke = creep.room.find(FIND_MY_STRUCTURES, {
+        filter:n=>n.structureType===STRUCTURE_NUKER
+    })[0];
     if (nuke) {
         for (let resource in creep.store) {
             TransferEnergy(creep, nuke, resource)
@@ -254,6 +260,33 @@ function RechargeControllerContainer(creep) {
         TransferEnergy(creep, controllerContainer[0]);
     }
 }
+
+/**
+ * Restocks the Energy of the FactoryStructure.
+ * @param creep
+ * @param factory
+ * @param energy
+ */
+function RechargeFactory(creep, factory, energy) {
+    creep.say('F')
+    if (factory && factory.store[RESOURCE_ENERGY] < energy) {
+        TransferEnergy(creep, factory, RESOURCE_ENERGY);
+    }
+}
+
+/**
+ *
+ * @param creep
+ * @param terminal
+ * @param energy
+ */
+function RechargeTerminal(creep, terminal, energy) {
+    creep.say('T')
+    if (terminal && terminal.store[RESOURCE_ENERGY] < energy) {
+        TransferEnergy(creep, terminal, RESOURCE_ENERGY);
+    }
+}
+
 
 // endregion
 
@@ -326,6 +359,25 @@ function WithdrawFromStorage(creep, room, mineral = RESOURCE_ENERGY) {
     }
 }
 
+/**
+ * Withdraws a specified resource from Terminal Unit in a specified room
+ * Default resource is Energy
+ * @param creep
+ * @param room
+ * @param mineral
+ */
+function WithdrawFromTerminal(creep, room, mineral = RESOURCE_ENERGY) {
+    let terminal = room.terminal;
+    if (terminal) {
+        WithdrawEnergy(creep, terminal, mineral);
+    }
+}
+
+function WithdrawFromFactory(creep, factory, mineral = RESOURCE_ENERGY) {
+    if (factory) {
+        WithdrawEnergy(creep, factory, mineral)
+    }
+}
 //endregion
 
 // region Section 3: Supply Functions
@@ -346,18 +398,12 @@ function SupplyCreep(creep, role) {
 /**
  * Supplies Factory with any resource needed.
  * @param creep
+ * @param factory
  * @param resource
  */
-function SupplyFactory(creep, resource) {
-    let factory = creep.room.find(FIND_MY_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_FACTORY
-    });
-    if (factory.length > 0) {
-        creep.say('🔄 F')
-        TransferEnergy(creep, factory[0], resource);
-    } else {
-        RechargeStorage(creep, creep.room)
-    }
+function SupplyFactory(creep, factory, resource) {
+    creep.say('🔄 F')
+    TransferEnergy(creep, factory, resource);
 }
 
 /**

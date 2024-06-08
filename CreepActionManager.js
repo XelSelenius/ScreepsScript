@@ -1,4 +1,4 @@
-require("lodash");
+const _=require("lodash");
 
 //Global Functions and Constants
 global.Mine = Mine;
@@ -12,8 +12,6 @@ global.ConductCollection = ConductCollection;
 global.ReserveController = ReserveController;
 global.ClaimController = ClaimController;
 global.DeliverPower = DeliverPower;
-global.Attack = Attack;
-global.Defend = Defend;
 global.extendCreepLifespan = extendCreepLifespan;
 global.PowerBankRobbery = PowerBankRobbery;
 global.CorridorMining = CorridorMining;
@@ -21,16 +19,12 @@ global.HealCreep = HealCreep;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
-const DEFENCE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
 const REINFORCE_PATH = {visualizePathStyle: {stroke: '#f9fd00'}};
 const REPAIR_PATH = {visualizePathStyle: {stroke: '#0b4b00'}};
 const SALVAGE_PATH = {visualizePathStyle: {stroke: '#00f0fb'}};
 const UPGRADE_PATH = {visualizePathStyle: {stroke: '#0005a7'}};
 const BUILD_PATH = {visualizePathStyle: {stroke: '#53035c'}};
 const TOMBRAIDING_PATH = {visualizePathStyle: {stroke: '#000000'}};
-
-//Constants for this File
-const REINFORCE_LEVEL = 30000;
 
 /**
  * Balanced and Optimized function to Mine from Energy Source
@@ -209,7 +203,7 @@ function Tombraiding(creep) {
                     creep.moveTo(new RoomPosition(25, 25, creep.room.name))
                     break;
                 case"W59S7":
-                    creep.moveTo(new RoomPosition(19, 22, creep.room.name))
+                    creep.moveTo(new RoomPosition(11, 23, creep.room.name))
                     break;
             }
         }
@@ -249,7 +243,7 @@ function ConductCollection(creep) {
                     creep.moveTo(new RoomPosition(26, 26, creep.room.name))
                     break;
                 case"W59S7":
-                    creep.moveTo(new RoomPosition(21, 22, creep.room.name))
+                    creep.moveTo(new RoomPosition(11, 21, creep.room.name))
                     break;
             }
     }
@@ -315,43 +309,10 @@ function DeliverPower(creep) {
             && powerSpawn[0].store[RESOURCE_ENERGY] === 5000
             && powerSpawn[0].store[RESOURCE_POWER] === 0) {
             creep.say("goPower")
+            if (creep.ticksToLive < 300 && creep.store.getUsedCapacity() === 0) {
+                creep.suicide();
+            }
             WithdrawEnergy(creep, creep.room.terminal, RESOURCE_POWER);
-        }
-    }
-}
-
-//TODO: Refactor this garbage of Attack and Defend or clean up the entire functions. 36 line of wasted data.
-function Attack(creep, hostiles) {
-    console.log(`Hostiles: ${hostiles.length}`)
-    // Attack the nearest hostile creep
-    if (creep.attack(hostiles[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(hostiles[0], {visualizePathStyle: {stroke: '#ff0000'}});
-    }
-}
-
-function Defend(creep, hostiles) {
-    let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
-    let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
-    for (let d = 0; d < defenders.length; d++) {
-        if (defenders[d].pos !== RAMPART[d] && defenders[d].memory.role === 'defender') {
-            defenders[d].moveTo(RAMPART[d], DEFENCE_PATH)
-            // Find hostile creeps in Melee range
-            let hostileCreepsInMelee = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 1); // Adjust the range as needed
-            if (hostiles.length > 0 && defenders[d].memory.role === 'defender') {
-                // Attack the closest hostile creep
-                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInMelee);
-                defenders[d].attack(targetCreep);
-            }
-        }
-        if (rangers[d].pos !== RAMPART[d]) {
-            rangers[d].moveTo(new RoomPosition(RAMPART[d].x + 1, RAMPART[d].y + 1, Game.rooms['W59S4'].name), DEFENCE_PATH)
-            // Find hostile creeps in Ranged range
-            let hostileCreepsInRange = rangers[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
-            if (hostiles.length > 0 && rangers[d].memory.role === 'ranger') {
-                // Range Attack the closest hostile creep
-                let targetCreep = rangers[d].pos.findClosestByRange(hostileCreepsInRange);
-                rangers[d].rangedAttack(targetCreep);
-            }
         }
     }
 }
@@ -392,26 +353,22 @@ function extendCreepLifespan(creep) {
  * @param targetRoom
  */
 function HealCreep(creep, targetRoom) {
-    // Ensure the target room is visible
-    if (!Game.rooms[targetRoom.name]) {
-        console.log(`Room ${targetRoom} is not visible.`);
-        return;
-    }
+    //Get in position
+    let position = new RoomPosition(36, 24, targetRoom)
+    creep.moveTo(position);
+    if (creep.room.name === targetRoom) {
+        // Find the target creep in the specified room
+        let targetCreep = Game.rooms[targetRoom].find(FIND_MY_CREEPS);
 
-    // Find the target creep in the specified room
-    let targetCreep = Game.rooms[targetRoom].find(FIND_MY_CREEPS);
+        targetCreep.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
 
-    if (targetCreep.length === 0) {
-        console.log(`No damaged creeps found in room ${targetRoom}.`);
-        return;
-    }
+        // Target the most damaged creep
+        let mostDamagedCreep = targetCreep[0];
 
-    // Target the most damaged creep
-    let mostDamagedCreep = targetCreep[0];
-
-    // Move towards and heal the target creep
-    if (creep.heal(mostDamagedCreep) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(mostDamagedCreep, {visualizePathStyle: {stroke: '#00ff00'}});
+        // Move towards and heal the target creep
+        if (creep.heal(mostDamagedCreep) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(mostDamagedCreep, {visualizePathStyle: {stroke: '#00ff00'}});
+        }
     }
 }
 
@@ -464,6 +421,7 @@ function PowerBankRobbery(creep, targetRoom, structure_const) {
                 let position = new RoomPosition(structure.pos.x, structure.pos.y, targetRoom);
                 creep.moveTo(position, MINE_PATH);
                 creep.attack(structure);
+                console.log(structure.hits)
             } else {
                 console.log(`No power bank detected in room ${targetRoom}`);
             }

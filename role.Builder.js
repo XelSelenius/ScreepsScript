@@ -19,8 +19,10 @@ let roleBuilder = {
         } else {
             if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 0) {
                 RechargeCreep(creep, 'S')
+            } else if(creep.room.terminal){
+                RechargeCreep(creep, 'T')
             } else {
-                RechargeCreep(creep, 'C')
+                RechargeCreep(creep,'C')
             }
 
             if (Game.rooms[creep.room.name].controller.level === 1) {
