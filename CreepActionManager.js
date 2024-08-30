@@ -189,8 +189,9 @@ function Tombraiding(creep) {
         }
     } else {
         creep.say('🔄 Idle');
-        RechargeStorage(creep, creep.room);
-
+        for (let item in creep.store){
+            SupplyTerminal(creep, item)
+        }
         if (creep.store.getUsedCapacity() === 0) {
             switch (creep.room.name) {
                 case"W59S4":
@@ -200,10 +201,13 @@ function Tombraiding(creep) {
                     creep.moveTo(new RoomPosition(7, 18, creep.room.name))
                     break;
                 case"W59S3":
-                    creep.moveTo(new RoomPosition(25, 25, creep.room.name))
+                    creep.moveTo(new RoomPosition(21, 10,creep.room.name))
                     break;
                 case"W59S7":
-                    creep.moveTo(new RoomPosition(11, 23, creep.room.name))
+                    creep.moveTo(new RoomPosition(11, 24, creep.room.name))
+                    break;
+                case"W59S6":
+                    creep.moveTo(new RoomPosition(18, 31, creep.room.name))
                     break;
             }
         }
@@ -240,10 +244,13 @@ function ConductCollection(creep) {
                     creep.moveTo(new RoomPosition(7, 20, creep.room.name))
                     break;
                 case"W59S3":
-                    creep.moveTo(new RoomPosition(26, 26, creep.room.name))
+                    creep.moveTo(new RoomPosition(23, 10, creep.room.name))
                     break;
                 case"W59S7":
-                    creep.moveTo(new RoomPosition(11, 21, creep.room.name))
+                    creep.moveTo(new RoomPosition(11, 20, creep.room.name))
+                    break;
+                case"W59S6":
+                    creep.moveTo(new RoomPosition(14, 31, creep.room.name))
                     break;
             }
     }
@@ -301,13 +308,13 @@ function ClaimController(creep) {
  * @param creep
  */
 function DeliverPower(creep) {
-    if (creep.room.name === "W59S4") {
-        let powerSpawn = creep.room.find(FIND_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_POWER_SPAWN
-        });
+    let powerSpawn = creep.room.find(FIND_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_POWER_SPAWN
+    })[0];
+    if (powerSpawn && creep.room.terminal.store[RESOURCE_POWER]) {
         if (creep.store.getUsedCapacity(RESOURCE_POWER) === 0
-            && powerSpawn[0].store[RESOURCE_ENERGY] === 5000
-            && powerSpawn[0].store[RESOURCE_POWER] === 0) {
+            && powerSpawn.store[RESOURCE_ENERGY] === 5000
+            && powerSpawn.store[RESOURCE_POWER] === 0) {
             creep.say("goPower")
             if (creep.ticksToLive < 300 && creep.store.getUsedCapacity() === 0) {
                 creep.suicide();
@@ -439,7 +446,7 @@ function PowerBankRobbery(creep, targetRoom, structure_const) {
  * @param targetRoom
  */
 function CorridorMining(creep, targetRoom) {
-    let observer = Game.getObjectById("6612807d4b090f1095ccb32a");
+    let observer = Game.getObjectById("667c78710f8b07c41e11685e");
     if (observer) {
         let result = observer.observeRoom(targetRoom);
         if (result === OK) {

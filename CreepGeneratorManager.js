@@ -44,7 +44,7 @@ function BuildCreep(role, bodyParts, roleName, creepCounter, spawner) {
     });
     if (creepsOfType && creepsOfType.length < creepCounter) {
         let newName = roleName + Game.time;
-        console.log(`Spawning new ${roleName} in ${spawner}: ${newName}`);
+        // console.log(`Spawning new ${roleName} in ${spawner}: ${newName}`);
         Game.spawns[spawner].spawnCreep(bodyParts, newName, {memory: {role: role}});
     }
 }

@@ -6,20 +6,24 @@ let roleColonizer = {
     run: function (creep) {
         setColonizationParameter(creep)
 
-        let originRoom = Game.rooms['W59S3'];
-        let targetRoom = Game.rooms['W59S7'];
+        let originRoom = Game.rooms['W59S7'];
+        let targetRoom = Game.rooms['W59S6'];
 
         if (creep.memory.colonization) {
             //Make it to Level 4 and build Storage
-            if (targetRoom.controller.level < 4) {
+            if (targetRoom.controller.level <= 4) {
                 creep.moveTo(targetRoom.controller);
                 Upgrade(creep, targetRoom);
             } else {
                 //Micromanage what is a priority
-                Build(creep, targetRoom.name);
-                RechargeTower(creep)
-                RechargeExtension(creep);
-                RechargeSpawn(creep)
+                if (Memory.rooms[targetRoom.name].constructionSites.length>0){
+                    Build(creep, targetRoom.name);
+                } else {
+                    Upgrade(creep, targetRoom);
+                }
+                // RechargeTower(creep)
+                // RechargeExtension(creep);
+                // RechargeSpawn(creep)
             }
         } else {
             //Eliminate losses by self-destruction
@@ -33,9 +37,9 @@ let roleColonizer = {
             }
 
             //Optional
-            Salvage(creep, RESOURCE_ENERGY)
-            Tombraiding(creep);
-            ConductCollection(creep);
+            // Salvage(creep, RESOURCE_ENERGY)
+            // Tombraiding(creep);
+            // ConductCollection(creep);
 
             //Primary Energy Consumption
             if (creep.room.name === targetRoom.name) {

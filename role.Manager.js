@@ -20,21 +20,28 @@ let roleManager = {
         })[0];
 
         // Manage the Empty Containers
-        WithdrawFromNonEmptyContainer(creep)
+        WithdrawFromNonEmptyContainer(creep);
 
         // Energy Supply
         EnergyManagement(creep, storageLink, storage, factory, terminal, TERMINAL_ENERGY, FACTORY_ENERGY)
 
-        // Mineral Supply
-        MineralFactoryManagement(creep, room, storage, factory, terminal)
+        if (factory && terminal) {
+            // Mineral Supply
+            MineralFactoryManagement(creep, room, storage, factory, terminal)
 
-        // Storage Management
-        // CleanStorage(creep, storage, terminal, room)
+            // Storage Management
+            // CleanStorage(creep, storage, terminal, factory, room);
+            // ReloadStorage(creep, storage, terminal, room);
+        }
     }
 };
 
 module.exports = roleManager;
 
+/**
+ * Sets the position of the Manager Creep in the Room Core.
+ * @param creep
+ */
 function ManagerPositioning(creep) {
     switch (creep.room.name) {
         case "W59S4":
@@ -45,6 +52,9 @@ function ManagerPositioning(creep) {
             break;
         case "W59S5":
             creep.moveTo(new RoomPosition(14, 19, creep.room.name));
+            break;
+        case "W59S6":
+            creep.moveTo(new RoomPosition(16, 28, creep.room.name));
             break;
         case "W59S7":
             creep.moveTo(new RoomPosition(20, 22, creep.room.name));
@@ -62,37 +72,33 @@ function ManagerPositioning(creep) {
  * @param TERMINAL_ENERGY
  * @param FACTORY_ENERGY
  */
-function EnergyManagement(creep, storageLink,storage, factory, terminal, TERMINAL_ENERGY, FACTORY_ENERGY) {
+function EnergyManagement(creep, storageLink, storage, factory, terminal, TERMINAL_ENERGY, FACTORY_ENERGY) {
     if (storageLink && storageLink.store[RESOURCE_ENERGY] > 0) {
-        // console.log(`${creep.room.name} Link Energy Transfer`)
         creep.withdraw(storageLink, RESOURCE_ENERGY)
-        RechargeStorage(creep, creep.room);
+        creep.transfer(storage, RESOURCE_ENERGY)
     } else if (factory && factory.store[RESOURCE_ENERGY] < FACTORY_ENERGY) {
-        // console.log(`${creep.room.name} Factory Energy Supply`)
         let requiredEnergy = FACTORY_ENERGY - factory.store[RESOURCE_ENERGY];
         if (creep.store[RESOURCE_ENERGY] < requiredEnergy) {
-            creep.withdraw(storage,RESOURCE_ENERGY)
+            creep.withdraw(storage, RESOURCE_ENERGY)
         }
         creep.transfer(factory, RESOURCE_ENERGY, Math.min(requiredEnergy, creep.store.getCapacity()));
     } else if (terminal && terminal.store[RESOURCE_ENERGY] < TERMINAL_ENERGY) {
-        // console.log(`${creep.room.name} Terminal Energy Supply`)
         let requiredEnergy = TERMINAL_ENERGY - terminal.store[RESOURCE_ENERGY];
         if (creep.store[RESOURCE_ENERGY] < Math.min(requiredEnergy, creep.store.getCapacity())) {
-            creep.withdraw(storage,RESOURCE_ENERGY)
+            creep.withdraw(storage, RESOURCE_ENERGY)
         }
         creep.transfer(terminal, RESOURCE_ENERGY, Math.min(requiredEnergy, creep.store.getCapacity()));
     } else if (terminal && terminal.store[RESOURCE_ENERGY] > TERMINAL_ENERGY) {
-        // console.log(`${creep.room.name} Terminal Energy Withdraw`)
         let overheadEnergy = terminal.store[RESOURCE_ENERGY] - TERMINAL_ENERGY;
-        creep.withdraw(terminal,RESOURCE_ENERGY,Math.min(overheadEnergy, creep.store.getCapacity()))
-        RechargeStorage(creep, creep.room)
+        creep.withdraw(terminal, RESOURCE_ENERGY, Math.min(overheadEnergy, creep.store.getCapacity()))
+        creep.transfer(storage, RESOURCE_ENERGY)
     } else if (creep.store[RESOURCE_ENERGY] > 0) {
-        RechargeStorage(creep, creep.room)
+        creep.transfer(storage, RESOURCE_ENERGY)
     }
 }
 
 /**
- * Management of the Factory its supply and product through the Config
+ * Management of the Factory and its supply and product through the Config
  * @param creep
  * @param room
  * @param storage
@@ -100,96 +106,95 @@ function EnergyManagement(creep, storageLink,storage, factory, terminal, TERMINA
  * @param terminal
  */
 function MineralFactoryManagement(creep, room, storage, factory, terminal) {
-    let mineral;
-    let mineralVolume;
-    let product = room.product
+    let product = room.product;
 
     if (room.ingredients) {
-        mineral = room.ingredients[0][0];
-        mineralVolume = room.ingredients[0][1];
-
-        // console.log(`${creep.room.name} Factory Mineral Supply`);
-
-        if (terminal.store[mineral] || creep.store[mineral]) {
-            let requiredMineral = mineralVolume - factory.store[mineral];
-            if (requiredMineral > 0) {
-                creep.withdraw(terminal, mineral, Math.min(requiredMineral, creep.store.getCapacity(), terminal.store[mineral]))
-                creep.transfer(factory, mineral, creep.store[mineral]);
-            } else if (creep.store[mineral]) {
-                SupplyTerminal(creep, mineral)
+        for (let [mineral, mineralVolume] of room.ingredients) {
+            let terminalAmount = terminal.store[mineral] || 0;
+            let creepAmount = creep.store[mineral] || 0;
+            if (terminalAmount || creepAmount) {
+                let requiredMineral = mineralVolume - factory.store[mineral];
+                if (requiredMineral > 0) {
+                    let amountToWithdraw = Math.min(requiredMineral, creep.store.getCapacity(), terminal.store[mineral]);
+                    if (amountToWithdraw > 0) {
+                        creep.withdraw(terminal, mineral, amountToWithdraw);
+                    }
+                    if (creep.store[mineral] > 0) {
+                        creep.transfer(factory, mineral);
+                    }
+                } else if (creep.store[mineral] > 0) {
+                    SupplyTerminal(creep, mineral);
+                }
             }
         }
     } else {
-        // console.log(`No mineral or mineral volume specified for room: ${creep.room.name}`);
+        console.log(`No ingredients specified for room: ${creep.room.name}`);
     }
 
     if (factory && product) {
-        // console.log(`${creep.room.name} Factory Product Withdraw`)
-        if (factory.store[product] > 0) {
-            WithdrawFromFactory(creep, factory, product)
+        if (factory.store[product] > 0 && creep.store.getFreeCapacity() > 0) {
+            WithdrawFromFactory(creep, factory, product);
         } else if (creep.store[product] > 0) {
-            SupplyTerminal(creep, product)
+            SupplyTerminal(creep, product);
         }
     }
 }
 
 /**
- * Clears Storage from unwanted items and reloads it with missing items.
+ * Clears Storage from unwanted items by discarding them into the Terminal as per Config Specifications
+ * @param creep
+ * @param storage
+ * @param terminal
+ * @param factory
+ * @param room
+ */
+function CleanStorage(creep, storage, terminal, factory, room) {
+    for (let item in storage.store) {
+        if (creep.store.getUsedCapacity() === 0) {
+            if (item !== RESOURCE_ENERGY) {
+                let requiredAmount = room.storage[item] || 0; // Default to 0 if undefined
+                if (storage.store[item] > requiredAmount) {
+                    let amount = Math.min(storage.store[item] - requiredAmount, creep.store.getFreeCapacity());
+                    if (amount > 0) {
+                        if (creep.withdraw(storage, item, amount) === OK) {
+                            creep.transfer(terminal, item);
+                        }
+                    }
+                }
+            } else {
+                creep.transfer(storage, RESOURCE_ENERGY);
+            }
+        } else if (!storage.store[Object.keys(creep.store)[0]] || creep.store.getUsedCapacity() > 0) {
+            SupplyTerminal(creep, Object.keys(creep.store)[0]);
+        }
+    }
+}
+
+/**
+ * Reloads the Storage from Terminal for any missing resources as per Config specification - Type and Amount
  * @param creep
  * @param storage
  * @param terminal
  * @param room
  */
-function CleanStorage(creep, storage, terminal, room) {
-    for (let item in storage.store) {
-        if (item !== RESOURCE_ENERGY) {
-            if (room.storage[item] && storage.store[item] > room.storage[item]) {
-                let amount = Math.min(storage.store[item] - room.storage[item], creep.store.getCapacity() - creep.store.getUsedCapacity());
-                if (amount > 0) {
-                    if (creep.withdraw(storage, item, amount) === OK) {
-                        creep.transfer(terminal, item);
-                    }
-                }
-            } else if (!room.storage[item]) {
-                let amount = Math.min(storage.store[item], creep.store.getCapacity() - creep.store.getUsedCapacity());
-                if (amount > 0) {
-                    if (creep.withdraw(storage, item, amount) === OK) {
-                        creep.transfer(terminal, item);
-                    }
-                }
-            }
-        }
-    }
-
+function ReloadStorage(creep, storage, terminal, room) {
     for (let item in terminal.store) {
-        if (item !== RESOURCE_ENERGY && room.storage[item] && storage.store[item] < room.storage[item]) {
-            let amount = Math.min(room.storage[item] - storage.store[item], creep.store.getCapacity() - creep.store.getUsedCapacity());
-            if (amount > 0) {
-                if (creep.withdraw(terminal, item, amount) === OK) {
-                    RechargeStorage(creep, creep.room);
+        if (creep.store.getFreeCapacity() > 0) {
+            if (item !== RESOURCE_ENERGY) {
+                let storageAmount = storage.store[item] || 0; // Default to 0 if undefined
+                let requiredAmount = room.storage[item] || 0; // Default to 0 if undefined
+
+                if (requiredAmount > 0 && storageAmount < requiredAmount) {
+                    let amount = Math.min(requiredAmount - storageAmount, creep.store.getFreeCapacity());
+                    if (amount > 0) {
+                        if (creep.withdraw(terminal, item, amount) === OK) {
+                            RechargeStorage(creep, creep.room);
+                        }
+                    }
                 }
             }
+        } else if (!terminal.store[Object.keys(creep.store)[0]] && storage.store[Object.keys(creep.store)[0]] < room.storage[Object.keys(creep.store)[0]]) {
+            RechargeStorage(creep, creep.room);
         }
     }
-
-    // Check creep's store and deposit any remaining resources to storage
-    // for (const resourceType in creep.store) {
-    //     if (creep.store[resourceType] > 0) {
-    //         RechargeStorage(creep, creep.room);
-    //     }
-    // }
 }
-
-/*  Honorable Mention.
-if (storage.store[mineral] >= STORAGE_MINERAL) {
-    let overheadStorageMineral = storage.store[mineral] - STORAGE_MINERAL;
-    let requiredFactoryMineral = mineralVolume - factory.store[mineral];
-    console.log(`Overhead: ${overheadStorageMineral}, Required: ${requiredFactoryMineral}`);
-    if (overheadStorageMineral > 0 && creep.store[mineral] === 0) {
-        creep.withdraw(storage, mineral, Math.min(overheadStorageMineral, creep.store.getCapacity()));     } else if (requiredFactoryMineral > 0 && creep.store[mineral] > 0) {
-        creep.transfer(factory, mineral, Math.min(requiredFactoryMineral, creep.store[mineral]));
-    } else {
-        creep.transfer(terminal, mineral, creep.store[mineral]);
-    }
-}
-*/

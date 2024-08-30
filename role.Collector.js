@@ -16,14 +16,16 @@ let roleCollector = {
             ConductCollection(creep);
             // WithdrawFromEnergySourceContainer(creep);
             DeliverPower(creep)
-            Salvage(creep, RESOURCE_ENERGY);
+            Salvage(creep, RESOURCE_KEANIUM);
             creep.memory.collecting = false;
         } else {
-            creep.say('🔄 Deploy');
+            // creep.say('🔄 Deploy');
             if (creep.store[RESOURCE_POWER]) {
                 SupplyPowerSpawn(creep, RESOURCE_POWER);
             } else {
-                RechargeStorage(creep, creep.room);
+                for (let item in creep.store) {
+                    SupplyTerminal(creep,item)
+                }
             }
         }
 

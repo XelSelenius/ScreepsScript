@@ -10,7 +10,7 @@ let roleHauler = {
                         RechargeControllerContainer(creep);
                         if (creep.room.controller.level === 8) {
                             SupplyLabsEnergy(creep)
-                            RechargeNuke(creep);
+                            // RechargeNuke(creep);
                             SupplyPowerSpawn(creep, RESOURCE_ENERGY);
                         }
                     }
@@ -20,7 +20,11 @@ let roleHauler = {
             if (creep.room.storage.store[RESOURCE_ENERGY]) {
                 WithdrawFromStorage(creep, creep.room);
             } else {
-                WithdrawFromTerminal(creep,creep.room, RESOURCE_ENERGY)
+                if(creep.room.terminal){
+                    WithdrawFromTerminal(creep,creep.room, RESOURCE_ENERGY)
+                } else {
+                    WithdrawFromEnergySourceContainer(creep)
+                }
             }
         }
     }

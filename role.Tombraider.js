@@ -11,30 +11,38 @@ const roleTombraider = {
                 creep.suicide();
             }
             let mineral = creep.room.find(FIND_MINERALS)
-            let mineralContainer = mineral[0].pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: s => s.structureType === STRUCTURE_CONTAINER
-            });
-            let resource;
-            switch (mineral[0].mineralType) {
-                case 'Z':
-                    resource = RESOURCE_ZYNTHIUM;
-                    break;
-                case 'H':
-                    resource = RESOURCE_HYDROGEN;
-                    break;
-                case 'O':
-                    resource = RESOURCE_OXYGEN;
-                    break;
-            }
-            if (mineralContainer.length > 0 && mineralContainer[0].store.getUsedCapacity() > 200) {
-                WithdrawEnergy(creep, mineralContainer[0], resource);
+            if (mineral.length) {
+                let mineralContainer = mineral[0].pos.findInRange(FIND_STRUCTURES, 2, {
+                    filter: s => s.structureType === STRUCTURE_CONTAINER
+                });
+                let resource;
+                switch (mineral[0].mineralType) {
+                    case 'Z':
+                        resource = RESOURCE_ZYNTHIUM;
+                        break;
+                    case 'H':
+                        resource = RESOURCE_HYDROGEN;
+                        break;
+                    case 'O':
+                        resource = RESOURCE_OXYGEN;
+                        break;
+                    case 'K':
+                        resource = RESOURCE_KEANIUM;
+                        break;
+                }
+                if (mineralContainer.length > 0 && mineralContainer[0].store.getUsedCapacity() > 200) {
+                    WithdrawEnergy(creep, mineralContainer[0], resource);
+                }
             }
         } else {
-            if (creep.room.name === "W58S3") {
-                RechargeStorage(creep, Game.rooms["W59S3"])
-            }
             creep.say('🔄 Deploy');
-            RechargeStorage(creep, creep.room);
+            if (creep.room.terminal) {
+                for (let item in creep.store) {
+                    SupplyTerminal(creep, item)
+                }
+            } else {
+                RechargeStorage(creep, creep.room);
+            }
         }
 
         // if (creep.room.energyAvailable <= 1500) {
