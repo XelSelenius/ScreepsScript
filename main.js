@@ -19,25 +19,39 @@ let roleHealer = require('role.Healer');
 let roleAttacker = require('role.Attacker');
 let roleColonizer = require('role.Colonizer');
 
+//TODO:extract into configuration
 const roomData = {
     'W59S3': {
         'name': 'W59S3',
         'factory': '6644e536d2fc54b57f935a27',// Game.getObjectById('6644e536d2fc54b57f935a27'),
         'product': RESOURCE_OXIDANT,
         'ingredients': [
-            // [RESOURCE_OXYGEN, 500],
+            [RESOURCE_OXYGEN, 500],
         ],
         'spawner': `Xel'Aurelius Primus`,
         'creepCounts': {
-            'harvester': Memory.rooms['W59S3'].sourceIDs.length,
+            'harvester': 2, //Memory.rooms['W59S3'].sourceIDs.length,
             'hauler': 1,
-            'upgrader': 1,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
+            'upgrader': 3,//Math.max(1, Math.round(Game.rooms['W59S3'].storage.store[RESOURCE_ENERGY] / 100000)),
             'builder': 0,
             'collector': 1,
             'tombraider': 1,
             'manager': 1,
             'carrier': 0,
-            // 'colonizer': 2,
+            'colonizer': 0,
+            'supplier':0,
+        },
+        'reactions': {
+            'Lab1': RESOURCE_OXYGEN,
+            'Lab2': RESOURCE_HYDROGEN,
+            'Reaction1': RESOURCE_HYDROXIDE,
+            'Lab3': RESOURCE_ZYNTHIUM_HYDRIDE,
+            'Lab4': RESOURCE_HYDROXIDE,
+            'Reaction2': RESOURCE_ZYNTHIUM_ACID,
+            'Lab5': RESOURCE_CATALYST,
+            'Lab6': RESOURCE_ZYNTHIUM_ACID,
+            'Reaction3_1': RESOURCE_CATALYZED_ZYNTHIUM_ACID,
+            'Reaction3_2': RESOURCE_CATALYZED_ZYNTHIUM_ACID,
         },
         'storage': {
             [RESOURCE_ZYNTHIUM]: 10000,
@@ -48,29 +62,30 @@ const roomData = {
             [RESOURCE_HYDROGEN]: 10000,
             [RESOURCE_CATALYST]: 10000,
             [RESOURCE_OPS]: 10000,
+            [RESOURCE_HYDROXIDE]: 10000,
         },
-        'walls': 3000000,
-        'ramparts': 5000000,
+        'walls': 10000000,
+        'ramparts': 10000000,
     },
     'W59S4': {
         'name': 'W59S4',
         'factory': '65d71e80e4219d254f628572',
         'product': RESOURCE_ZYNTHIUM_BAR,
         'ingredients': [
-            // [RESOURCE_ZYNTHIUM, 500],
+            [RESOURCE_ZYNTHIUM, 500],
             // [RESOURCE_ZYNTHIUM_BAR, 500],
             // [RESOURCE_METAL, 500],
             // [RESOURCE_ENERGY,500]
         ],
         'spawner': `Xel'Invictus Primus`,
         'creepCounts': {
-            'harvester': Memory.rooms['W59S4'].sourceIDs.length,
+            'harvester': 1, //Memory.rooms['W59S4'].sourceIDs.length,
             'upgrader': 1,
             'builder': 0,
-            'hauler': 2,
+            'hauler': 1,
             'collector': 1,
             'tombraider': 1,
-            'supplier': 1,
+            'supplier': 0,
             'manager': 1,
             'miner': 0,
             'healer': 0,
@@ -99,24 +114,28 @@ const roomData = {
             [RESOURCE_CATALYST]: 10000,
             [RESOURCE_HYDROXIDE]: 10000,
             [RESOURCE_OPS]: 10000,
+            [RESOURCE_CATALYZED_GHODIUM_ALKALIDE]: 10000,
         },
-        'walls': 2000000,
-        'ramparts': 5000000,
+        'walls': 4000000,
+        'ramparts': 10000000,
     },
     'W59S5': {
         'name': 'W59S5',
         'factory': '664b79b94d45cc3937de4f09',//Game.getObjectById('664b79b94d45cc3937de4f09'),
-        'product': RESOURCE_GHODIUM_MELT,
+        'product': RESOURCE_REDUCTANT,
         'ingredients': [
-            // [RESOURCE_GHODIUM, 500],
+            [RESOURCE_GHODIUM, 500],
+            // [RESOURCE_KEANIUM_BAR, 100],
+            [RESOURCE_ZYNTHIUM_BAR, 100],
+            [RESOURCE_HYDROGEN, 500],
         ],
         'spawner': `Xel'Hydrogenius Primus`,
         'creepCounts': {
-            'harvester': Memory.rooms['W59S5'].sourceIDs.length,
-            'upgrader': 1,//Math.max(1, Game.rooms['W59S5'].storage.store[RESOURCE_ENERGY] / 100000),
+            'harvester': 1, //Memory.rooms['W59S5'].sourceIDs.length,
+            'upgrader': 1,
             'builder': 0,
             'hauler': 1,
-            'collector': 0,
+            'collector': 1,
             'tombraider': 1,
             'manager': 1,
             'supplier': 0,
@@ -146,10 +165,10 @@ const roomData = {
             [RESOURCE_OPS]: 10000,
             [RESOURCE_ZYNTHIUM_KEANITE]: 10000,
             [RESOURCE_UTRIUM_LEMERGITE]: 10000,
-            [RESOURCE_GHODIUM]: 10000,
+            [RESOURCE_GHODIUM]: 50000,
         },
-        'walls': 1000000,
-        'ramparts': 3000000,
+        'walls': 2000000,
+        'ramparts': 5000000,
     },
     'W59S6': {
         'name': 'W59S6',
@@ -160,37 +179,26 @@ const roomData = {
         ],
         'spawner': `Xel'Keanite Secundis`,
         'creepCounts': {
-            'harvester': Memory.rooms['W59S6'].sourceIDs.length,
+            'harvester': 1, //Memory.rooms['W59S6'].sourceIDs.length,
             'hauler': 1,
             'upgrader': 2,
             'manager': 1,
             'collector': 1,
             'tombraider': 1,
-            'builder': 2,
+            'builder': 0,
+            'supplier': 0,
         },
-        'walls': 0,
-        'ramparts': 100000,
-    },
-    'W59S7': {
-        'name': 'W59S7',
-        'factory': '6675ca04be38cf0e9f7871e3',
-        'product': RESOURCE_OXIDANT,
-        'ingredients': [
-            [RESOURCE_OXYGEN, 500],
-        ],
-        'spawner': `Xel'Gildeon Primus`,
-        'creepCounts': {
-            'harvester': Memory.rooms['W59S7'].sourceIDs.length,
-            'hauler': 1,
-            'upgrader': 3,
-            'builder': 2,
-            'tombraider': 1,
-            'collector': 1,
-            'manager': 1,
-            'claimer': 0,
-            'colonizer': 0,
-            'attacker': 0,
-            'miner': 0,
+        'reactions': {
+            'Lab1': RESOURCE_OXYGEN,
+            'Lab2': RESOURCE_HYDROGEN,
+            'Reaction1': RESOURCE_HYDROXIDE,
+            'Lab3': RESOURCE_KEANIUM_OXIDE,
+            'Lab4': RESOURCE_HYDROXIDE,
+            'Reaction2': RESOURCE_KEANIUM_ALKALIDE,
+            'Lab5': RESOURCE_CATALYST,
+            'Lab6': RESOURCE_KEANIUM_ALKALIDE,
+            'Reaction3_1': RESOURCE_CATALYZED_KEANIUM_ALKALIDE,
+            'Reaction3_2': RESOURCE_CATALYZED_KEANIUM_ALKALIDE,
         },
         'storage': {
             [RESOURCE_ZYNTHIUM]: 10000,
@@ -202,10 +210,88 @@ const roomData = {
             [RESOURCE_CATALYST]: 10000,
             [RESOURCE_HYDROXIDE]: 10000,
             [RESOURCE_OPS]: 10000,
-
         },
-        'walls': 1100000,
+        'walls': 2000000,
         'ramparts': 2000000,
+    },
+    'W59S7': {
+        'name': 'W59S7',
+        'factory': '6675ca04be38cf0e9f7871e3',
+        'product': RESOURCE_OXIDANT,
+        'ingredients': [
+            [RESOURCE_OXYGEN, 500],
+        ],
+        'spawner': `Xel'Gildeon Primus`,
+        'creepCounts': {
+            'harvester': 2, //Memory.rooms['W59S7'].sourceIDs.length,
+            'hauler': 1,
+            'upgrader': 3,
+            'builder': 0,
+            'tombraider': 1,
+            'collector': 1,
+            'manager': 1,
+            'claimer': 0,
+            'colonizer': 0,
+            'attacker': 0,
+            'miner': 0,
+            'supplier': 0,
+        },
+        'reactions': {
+            'Lab1': RESOURCE_OXYGEN,
+            'Lab2': RESOURCE_HYDROGEN,
+            'Reaction1': RESOURCE_HYDROXIDE,
+            'Lab3': RESOURCE_UTRIUM_HYDRIDE,
+            'Lab4': RESOURCE_HYDROXIDE,
+            'Reaction2': RESOURCE_UTRIUM_ACID,
+            'Lab5': RESOURCE_CATALYST,
+            'Lab6': RESOURCE_UTRIUM_ACID,
+            'Reaction3_1': RESOURCE_CATALYZED_UTRIUM_ACID,
+            'Reaction3_2': RESOURCE_CATALYZED_UTRIUM_ACID,
+        },
+        'storage': {
+            [RESOURCE_ZYNTHIUM]: 10000,
+            [RESOURCE_LEMERGIUM]: 10000,
+            [RESOURCE_UTRIUM]: 10000,
+            [RESOURCE_KEANIUM]: 10000,
+            [RESOURCE_OXYGEN]: 10000,
+            [RESOURCE_HYDROGEN]: 10000,
+            [RESOURCE_CATALYST]: 10000,
+            [RESOURCE_HYDROXIDE]: 10000,
+            [RESOURCE_OPS]: 10000,
+        },
+        'walls': 2500000,
+        'ramparts': 5000000,
+    },
+    'W58S6': {
+        'name': 'W58S6',
+        'factory': '67c4fe1434c1b168b5dad75a',//Game.getObjectById('664b79b94d45cc3937de4f09'),
+        'product': RESOURCE_KEANIUM_BAR,
+        'ingredients': [
+            [RESOURCE_KEANIUM, 500],
+        ],
+        'spawner': `Xel'Xellity Secundis`,
+        'creepCounts': {
+            'harvester': 1,
+            'hauler': 1,
+            'upgrader': 1,
+            'manager': 1,
+            'collector': 1,
+            'tombraider': 1,
+            'builder': 0,
+        },
+        'storage': {
+            [RESOURCE_ZYNTHIUM]: 10000,
+            [RESOURCE_LEMERGIUM]: 10000,
+            [RESOURCE_UTRIUM]: 10000,
+            [RESOURCE_KEANIUM]: 10000,
+            [RESOURCE_OXYGEN]: 10000,
+            [RESOURCE_HYDROGEN]: 10000,
+            [RESOURCE_CATALYST]: 10000,
+            [RESOURCE_HYDROXIDE]: 10000,
+            [RESOURCE_OPS]: 10000,
+        },
+        'walls': 500000,
+        'ramparts': 1000000,
     },
     // Add more rooms as needed
 };
@@ -222,7 +308,7 @@ module.exports.loop = function () {
 }
 
 /**
- * Initializes the roles of each creep post creation
+ * Initializes the roles of each creep post-creation
  */
 function CreepDrivers() {
     //Clean Memory from Dead Creeps
@@ -312,7 +398,7 @@ function MemoriseConstructionSites(roomName) {
     // Ensure Memory.rooms[roomName] is initialized as an object
     Memory.rooms[roomName] = Memory.rooms[roomName] || {};
 
-    // Check if constructionSites array is not defined or empty
+    // Check if the constructionSites array is not defined or empty
     if (!Memory.rooms[roomName].constructionSites || Memory.rooms[roomName].constructionSites.length === 0) {
         // Check if the room is visible
         if (Game.rooms[roomName]) {
@@ -354,8 +440,9 @@ function MemoriseSources(roomName) {
 }
 
 /**
- * Handles Energy-transfers between Links. Storage and Controller Links being special cases.
- * It is based on defined room in the RoomData Object as the Owned Room may have neither Link nor Storage.
+ * Handles Energy transfers between Links.
+ * Storage and Controller Links are special cases.
+ * It is based on a defined room in the RoomData Object as the Owned Room may have neither Link nor Storage.
  */
 function ProcessLinkTransfer() {
     for (let roomName in roomData) {
@@ -375,7 +462,7 @@ function ProcessLinkTransfer() {
                 console.log(`${room.name} - S - ${closestLinkToStorage}`);
             }
 
-            //Find the closest Link to Controller
+            //Find the closest Link to the Controller
             let closestLinkToController;
             try {
                 closestLinkToController = room.controller.pos.findInRange(links, 3);
@@ -467,26 +554,41 @@ function TowerDriver(room) {
  */
 function TerminalDriver() {
     Game.market.deal('', 3000, 'W59S5');
-    // Game.market.createOrder(
+    // Game.market.createOrder({
     //     type: ORDER_SELL,
     //     resourceType: RESOURCE_OXIDANT,
-    //     price: 255,
-    //     totalAmount: 10000,
+    //     price: 230,
+    //     totalAmount: 2000,
     //     roomName: 'W59S3'
     // });
-    // Game.getObjectById('65d72196e456720d57347646').send(RESOURCE_ZYNTHIUM, 10000, 'W59S5');
+    // Game.market.createOrder({
+    //     id: "67d1e75b3fbcdb00131e1a6d",
+    //     type: ORDER_BUY,
+    //     resourceType: RESOURCE_UTRIUM_LEMERGITE,
+    //     price: 30,
+    //     totalAmount: 25000,
+    //     roomName: 'W59S5'
+    // });
+    // Game.market.cancelOrder("67d1e7ab3fbcdb00131e38ac")
+    // Game.getObjectById('664998b358b2aafa43599627').send(RESOURCE_ENERGY, 100000, 'W59S6');
+
+    // Game.getObjectById('66913300f8c80caac90be824').send(RESOURCE_KEANIUM_BAR, 5000, 'W59S5');
+    // Game.getObjectById('65d72196e456720d57347646').send(RESOURCE_ZYNTHIUM, 1000, 'W59S5');
+    //
+    // Game.getObjectById('664998b358b2aafa43599627').send(RESOURCE_HYDROGEN, 2000, 'W59S6');
+    // Game.getObjectById('6644e2f8ce89aa5adf869f8b').send(RESOURCE_OXYGEN, 9000, 'W59S6');
 }
 
 /**
  * Deals with the processing of power
  */
 function PowerProcessor() {
-    let powerSpawn = Game.getObjectById("66371beb7929396fee3bc5d4")
+    let powerSpawn = Game.getObjectById("")
     let powerSpawn2 = Game.getObjectById("66695afd836cc4e5e3418a6b")
     let powerSpawn3 = Game.getObjectById("66802a7c2dedfcbca21f9e05")
-    if (powerSpawn.store[RESOURCE_ENERGY] > 0 && powerSpawn.store[RESOURCE_POWER] > 0) {
-        powerSpawn.processPower();
-    }
+    // if (powerSpawn.store[RESOURCE_ENERGY] > 0 && powerSpawn.store[RESOURCE_POWER] > 0) {
+    //     powerSpawn.processPower();
+    // }
     if (powerSpawn2.store[RESOURCE_ENERGY] > 0 && powerSpawn2.store[RESOURCE_POWER] > 0) {
         powerSpawn2.processPower();
     }

@@ -59,6 +59,9 @@ function ManagerPositioning(creep) {
         case "W59S7":
             creep.moveTo(new RoomPosition(20, 22, creep.room.name));
             break;
+        case "W58S6":
+            creep.moveTo(new RoomPosition(16, 19, creep.room.name));
+            break;
     }
 }
 
@@ -193,7 +196,7 @@ function ReloadStorage(creep, storage, terminal, room) {
                     }
                 }
             }
-        } else if (!terminal.store[Object.keys(creep.store)[0]] && storage.store[Object.keys(creep.store)[0]] < room.storage[Object.keys(creep.store)[0]]) {
+        } else if (!terminal.store[Object.keys(creep.store)[0]] || storage.store[Object.keys(creep.store)[0]] < room.storage[Object.keys(creep.store)[0]]) {
             RechargeStorage(creep, creep.room);
         }
     }

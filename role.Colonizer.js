@@ -6,12 +6,12 @@ let roleColonizer = {
     run: function (creep) {
         setColonizationParameter(creep)
 
-        let originRoom = Game.rooms['W59S7'];
-        let targetRoom = Game.rooms['W59S6'];
+        let originRoom = Game.rooms['W59S6'];
+        let targetRoom = Game.rooms['W58S6'];
 
         if (creep.memory.colonization) {
             //Make it to Level 4 and build Storage
-            if (targetRoom.controller.level <= 4) {
+            if (targetRoom.controller.level < 4) {
                 creep.moveTo(targetRoom.controller);
                 Upgrade(creep, targetRoom);
             } else {

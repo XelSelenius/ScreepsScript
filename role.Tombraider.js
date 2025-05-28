@@ -30,7 +30,7 @@ const roleTombraider = {
                         resource = RESOURCE_KEANIUM;
                         break;
                 }
-                if (mineralContainer.length > 0 && mineralContainer[0].store.getUsedCapacity() > 200) {
+                if (mineralContainer.length > 0 && mineralContainer[0].store.getUsedCapacity() >= 300) {
                     WithdrawEnergy(creep, mineralContainer[0], resource);
                 }
             }

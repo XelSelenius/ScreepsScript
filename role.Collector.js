@@ -16,7 +16,7 @@ let roleCollector = {
             ConductCollection(creep);
             // WithdrawFromEnergySourceContainer(creep);
             DeliverPower(creep)
-            Salvage(creep, RESOURCE_KEANIUM);
+            Salvage(creep, RESOURCE_ENERGY);
             creep.memory.collecting = false;
         } else {
             // creep.say('🔄 Deploy');
@@ -32,8 +32,12 @@ let roleCollector = {
         // if (creep.room.energyAvailable <= 1500) {
         //     creep.say('112')
         //     if (creep.store[RESOURCE_ENERGY] === 0) {
-        //         RechargeStorage(creep, creep.room);
-        //         WithdrawFromStorage(creep, creep.room, RESOURCE_ENERGY);
+        //         // RechargeStorage(creep, creep.room);
+        //         if(creep.room.storage.store[RESOURCE_ENERGY] === 0){
+        //             WithdrawFromTerminal(creep, creep.room, RESOURCE_ENERGY);
+        //         }else{
+        //             WithdrawFromStorage(creep, creep.room, RESOURCE_ENERGY);
+        //         }
         //     } else {
         //         RechargeExtension(creep);
         //     }

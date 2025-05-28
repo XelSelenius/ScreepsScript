@@ -1,4 +1,4 @@
-const _=require("lodash");
+const _ = require("lodash");
 
 //Global Functions and Constants
 global.Mine = Mine;
@@ -54,7 +54,7 @@ function Mine(creep) {
 }
 
 /**
- * Used for the purpose of draining energy from Ruins if present in the room.
+ * Used to drain energy from Ruins if present in the room.
  * @param creep
  * @param resource
  */
@@ -101,7 +101,8 @@ function Reinforce(creep, wallsHP, rampartsHP) {
 }
 
 /**
- * Commences repair based on Room.memory.damagedStructures list. Upon depletion of the list it is automatically renews from main.js
+ * Begins repair based on the Room.memory.damagedStructures list.
+ * Upon depletion of the list, it is automatically renewed from main.js
  * @param creep
  * @param roomName
  */
@@ -133,7 +134,7 @@ function Repair(creep, roomName) {
 
 /**
  * Build Function - finds any sites and moves the creep there and performs the build operation.
- * Inter-Room now available
+ * Inter-Room is now available
  * @param creep
  * @param roomName
  */
@@ -189,7 +190,7 @@ function Tombraiding(creep) {
         }
     } else {
         creep.say('🔄 Idle');
-        for (let item in creep.store){
+        for (let item in creep.store) {
             SupplyTerminal(creep, item)
         }
         if (creep.store.getUsedCapacity() === 0) {
@@ -201,13 +202,16 @@ function Tombraiding(creep) {
                     creep.moveTo(new RoomPosition(7, 18, creep.room.name))
                     break;
                 case"W59S3":
-                    creep.moveTo(new RoomPosition(21, 10,creep.room.name))
+                    creep.moveTo(new RoomPosition(21, 10, creep.room.name))
                     break;
                 case"W59S7":
                     creep.moveTo(new RoomPosition(11, 24, creep.room.name))
                     break;
                 case"W59S6":
                     creep.moveTo(new RoomPosition(18, 31, creep.room.name))
+                    break;
+                case"W58S6":
+                    creep.moveTo(new RoomPosition(14, 23, creep.room.name))
                     break;
             }
         }
@@ -232,7 +236,7 @@ function ConductCollection(creep) {
             creep.moveTo(closestResource, TOMBRAIDING_PATH);
         }
     } else {
-        // Handle the case when there are no  dropped valid resources
+        // Handle the case when there are no dropped valid resources
         creep.say('🔄 Idle');
         RechargeStorage(creep, creep.room);
         if (creep.store.getUsedCapacity() === 0)
@@ -251,6 +255,9 @@ function ConductCollection(creep) {
                     break;
                 case"W59S6":
                     creep.moveTo(new RoomPosition(14, 31, creep.room.name))
+                    break;
+                case"W58S6":
+                    creep.moveTo(new RoomPosition(18, 23, creep.room.name))
                     break;
             }
     }
@@ -386,7 +393,7 @@ function HealCreep(creep, targetRoom) {
  */
 function HasStructure(roomName, structure_const) {
     let room = Game.rooms[roomName];
-    if (!room) return false; // Room not visible, can't determine
+    if (!room) return false; // Room is not visible or can't determine
     let structures = room.find(FIND_STRUCTURES, {
         filter: structure => structure.structureType === structure_const
     });
@@ -402,7 +409,7 @@ function HasStructure(roomName, structure_const) {
  */
 function HasDeposit(roomName) {
     let room = Game.rooms[roomName];
-    if (!room) return false; // Room not visible, can't determine
+    if (!room) return false; // Room is not visible or can't determine
     let deposits = room.find(FIND_DEPOSITS)
     if (deposits.length > 0) {
         return deposits[0];
