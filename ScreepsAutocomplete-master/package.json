@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "IDE Autocomplete for Screeps",
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.23"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
